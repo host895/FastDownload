@@ -22,7 +22,7 @@ const full = location.href;
 /* نلاقي مكان api= */
 const idx = full.indexOf('api=');
 if (idx === -1){
-  document.body.innerHTML = '<div style="font-family:Consolas,monospace;font-size:11px;color:#000">خطأ للحصول علي ال api key مجانا تواصل هنا<br>@lego_courses</div>';
+  document.body.innerHTML = '<div style="font-family:Consolas,monospace;font-size:11px;color:#000">خطأ للحصول علي ال api key مجانا تواصل هنا تليجرام<br>@lego_courses</div>';
   throw 0;
 }
 
@@ -30,7 +30,7 @@ if (idx === -1){
 const qIndex = full.indexOf('?');
 const qs = new URLSearchParams(qIndex >= 0 ? full.substring(qIndex) : '');
 if (qs.get('api') !== API_KEY){
-  document.body.innerHTML = '<div style="font-family:Consolas,monospace;font-size:11px;color:#000">خطأ للحصول علي ال api key مجانا تواصل هنا<br>@lego_courses</div>';
+  document.body.innerHTML = '<div style="font-family:Consolas,monospace;font-size:11px;color:#000">خطأ للحصول علي ال api key مجانا تواصل هنا تليجرام<br>@lego_courses</div>';
   throw 0;
 }
 
@@ -49,8 +49,8 @@ const enc = btoa(unescape(encodeURIComponent(partToEncode)))
   .replace(/\+/g,'-')
   .replace(/\//g,'_');
 
-/* رابط الصفحة الحالية + ?u=التشفير */
-const baseUrl = location.origin + location.pathname;
+/* الرابط النهائي = dl.html?u=التشفير */
+const baseUrl = location.origin + location.pathname.replace('index.html', 'dl.html');
 const finalUrl = baseUrl + '?u=' + enc;
 
 document.getElementById('out').textContent = finalUrl;
