@@ -49,8 +49,8 @@ const enc = btoa(unescape(encodeURIComponent(partToEncode)))
   .replace(/\+/g,'-')
   .replace(/\//g,'_');
 
-/* الرابط النهائي = dl.html?u=التشفير */
-const baseUrl = location.origin + location.pathname.replace('index.html', 'dl.html');
+/* الرابط النهائي = dl/?u=التشفير */
+const baseUrl = location.origin + location.pathname.replace('index.html', 'dl/');
 const finalUrl = baseUrl + '?u=' + enc;
 
 document.getElementById('out').textContent = finalUrl;
