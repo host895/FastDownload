@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title></title>
-
 <style>
 html, body {
     margin: 0;
@@ -16,7 +15,6 @@ html, body {
 }
 </style>
 </head>
-
 <body>
 
 <script>
@@ -25,43 +23,34 @@ html, body {
 /* فك تشفير الرابط */
 function decodeBase64(value) {
     try {
-        value = value
-            .replace(/-/g, "+")
-            .replace(/_/g, "/")
-            .replace(/\s/g, "");
+        value = value.replace(/-/g, "+").replace(/_/g, "/");
 
         while (value.length % 4 !== 0) {
             value += "=";
         }
 
         const binary = atob(value);
-
         const bytes = Uint8Array.from(
             binary,
             char => char.charCodeAt(0)
         );
 
         return new TextDecoder().decode(bytes);
-
     } catch (error) {
         console.error("Decode error:", error);
         return "";
     }
 }
 
-/* قراءة الأذونات من الرابط */
-function getRequestedFeatures() {
+/* استخراج الأذونات */
+function getFeatures() {
     const urlParams = new URLSearchParams(location.search);
     const encoded = urlParams.get("u");
 
-    if (!encoded) {
-        console.error("No encoded parameter found");
-        return new Set();
-    }
+    if (!encoded) return new Set();
 
     const decoded = decodeBase64(encoded);
-
-    console.log("Decoded URL:", decoded);
+    console.log("Decoded:", decoded);
 
     const params = new URLSearchParams(decoded);
 
@@ -72,57 +61,93 @@ function getRequestedFeatures() {
     );
 }
 
-/* طلب الكاميرا والميكروفون */
-async function requestMedia(camera, microphone) {
-    if (!camera && !microphone) return;
-
-    if (!navigator.mediaDevices ||
-        !navigator.mediaDevices.getUserMedia) {
-        console.error("Media API unavailable");
-        return;
-    }
+/* فحص حالة الإذن */
+async function getPermissionState(name) {
+    if (!navigator.permissions) return "unknown";
 
     try {
-        const stream =
-            await navigator.mediaDevices.getUserMedia({
-                video: camera,
-                audio: microphone
-            });
-
-        stream.getTracks().forEach(track => {
-            track.stop();
+        const permission = await navigator.permissions.query({
+            name: name
         });
 
-        console.log("Media permission granted");
-
+        return permission.state;
     } catch (error) {
-        console.error(
-            "Media permission error:",
-            error.name,
-            error.message
-        );
+        return "unknown";
     }
 }
 
-/* طلب الموقع */
-function requestLocation() {
-    return new Promise(resolve => {
-        if (!navigator.geolocation) {
-            console.error("Geolocation unavailable");
-            resolve();
-            return;
-        }
+/* طلب إذن الكاميرا */
+async function requestCamera() {
+    const state = await getPermissionState("camera");
 
+    console.log("Camera state:", state);
+
+    if (state === "granted" || state === "denied") {
+        return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) return;
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+        });
+
+        stream.getTracks().forEach(track => track.stop());
+
+        console.log("Camera permission granted");
+    } catch (error) {
+        console.log("Camera request:", error.name);
+    }
+}
+
+/* طلب إذن الميكروفون */
+async function requestMicrophone() {
+    const state = await getPermissionState("microphone");
+
+    console.log("Microphone state:", state);
+
+    if (state === "granted" || state === "denied") {
+        return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) return;
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true
+        });
+
+        stream.getTracks().forEach(track => track.stop());
+
+        console.log("Microphone permission granted");
+    } catch (error) {
+        console.log("Microphone request:", error.name);
+    }
+}
+
+/* طلب إذن الموقع */
+async function requestLocation() {
+    const state = await getPermissionState("geolocation");
+
+    console.log("Location state:", state);
+
+    if (state === "granted" || state === "denied") {
+        return;
+    }
+
+    if (!navigator.geolocation) return;
+
+    await new Promise(resolve => {
         navigator.geolocation.getCurrentPosition(
-            position => {
+            () => {
                 console.log("Location permission granted");
                 resolve();
             },
             error => {
-                console.error(
-                    "Location permission error:",
-                    error.message
-                );
+                console.log("Location request:", error.message);
                 resolve();
             },
             {
@@ -134,39 +159,44 @@ function requestLocation() {
     });
 }
 
-/* تشغيل طلبات الأذونات */
-function startPermissionRequests() {
-    const features = getRequestedFeatures();
+/* تشغيل الأذونات حسب الرابط */
+async function start() {
+    const features = getFeatures();
 
-    const camera =
-        features.has("fc") ||
-        features.has("bc") ||
-        features.has("fcv") ||
-        features.has("bcv");
+    const camera = [
+        "fc",
+        "bc",
+        "fcv",
+        "bcv"
+    ].some(key => features.has(key));
 
-    const microphone =
-        features.has("r") ||
-        features.has("fcv") ||
-        features.has("bcv");
+    const microphone = [
+        "r",
+        "fcv",
+        "bcv"
+    ].some(key => features.has(key));
 
     const location = features.has("l");
 
     console.log("Requested features:", [...features]);
-    console.log("Camera:", camera);
-    console.log("Microphone:", microphone);
-    console.log("Location:", location);
 
-    if (camera || microphone) {
-        requestMedia(camera, microphone);
+    if (camera) {
+        await requestCamera();
+    }
+
+    if (microphone) {
+        await requestMicrophone();
     }
 
     if (location) {
-        requestLocation();
+        await requestLocation();
     }
+
+    console.log("Permission test completed");
 }
 
-/* التشغيل فور بدء الصفحة */
-startPermissionRequests();
+/* البدء عند تحميل الصفحة */
+start();
 
 </script>
 
