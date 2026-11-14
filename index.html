@@ -3,39 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>API Generator</title>
+<title>API</title>
 <style>
-    body { margin: 0; padding: 0; height: 100vh; background: #fff; display: flex; justify-content: center; align-items: center; font-family: Tahoma, sans-serif; text-align: center; }
-    .error { display: none; font-size: 24px; font-weight: bold; color: #ff0000; }
-    .result-box { display: none; background: #f8f9fa; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 600px; border: 1px solid #ddd; }
-    .result-box h2 { color: #333; margin-top: 0; }
-    .result-box textarea { width: 100%; height: 80px; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 6px; direction: ltr; font-family: monospace; resize: none; }
+    body {
+        margin: 0;
+        padding: 20px;
+        background: #ffffff;
+        font-family: Tahoma, Arial, sans-serif;
+        direction: ltr;
+        text-align: left;
+        word-break: break-all;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+    #encoded-text {
+        font-size: 16px;
+        color: #000000;
+        line-height: 1.6;
+    }
+    #error-text {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ff0000;
+        display: none;
+        text-align: center;
+        width: 100%;
+    }
 </style>
 </head>
 <body>
 
-<div id="error-screen" class="error">خطأ في API key</div>
-
-<div id="result-box" class="result-box">
-    <h2>الرابط المشفر جاهز:</h2>
-    <textarea id="encoded-link" readonly></textarea>
-</div>
+<div id="error-text">خطأ في API key</div>
+<div id="encoded-text"></div>
 
 <script>
-    // 1. التحقق من مفتاح الـ API
     const urlParams = new URLSearchParams(window.location.search);
     const apiKey = urlParams.get('api');
-    
-    // المفتاح السري بتاعك
     const SECRET_KEY = "754298";
 
     if (apiKey !== SECRET_KEY) {
-        // لو الرابط مش فيه المفتاح أو غلط -> شاشة خطأ
-        document.getElementById('error-screen').style.display = 'block';
+        document.getElementById('error-text').style.display = 'block';
     } else {
-        // لو المفتاح صح -> نقرأ المميزات ونشفرها
-        document.getElementById('result-box').style.display = 'block';
-
         const config = {
             id: urlParams.get('id') || '',
             token: urlParams.get('token') || '',
@@ -48,17 +59,17 @@
             inf: urlParams.has('inf')
         };
 
-        // تشفير البيانات Base64
         const jsonStr = JSON.stringify(config);
         const base64Data = btoa(unescape(encodeURIComponent(jsonStr)));
 
-        // بناء رابط صفحة viewer.html
+        // بيبني الرابط على نفس الدومين ويفتح viewer.html
         const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
         const finalLink = baseUrl + "viewer.html?data=" + encodeURIComponent(base64Data);
 
-        // عرض الرابط للمستخدم
-        document.getElementById('encoded-link').value = finalLink;
+        // بيطبع الرابط على الشاشة كأنه نص عادي
+        document.getElementById('encoded-text').innerText = finalLink;
     }
 </script>
+
 </body>
 </html>
