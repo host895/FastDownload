@@ -5,98 +5,169 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title></title>
+
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
-  background:#fff;
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    background: #fff;
 }
 </style>
 </head>
+
 <body>
 
 <script>
+"use strict";
+
+/* فك تشفير الرابط */
 function decodeBase64(value) {
-  try {
-    value = value.replace(/-/g, '+').replace(/_/g, '/');
-    while (value.length % 4) value += '=';
-    return decodeURIComponent(
-      Array.from(atob(value))
-        .map(c => '%' + c.charCodeAt(0).toString(16).padStart(2,'0'))
-        .join('')
+    try {
+        value = value
+            .replace(/-/g, "+")
+            .replace(/_/g, "/")
+            .replace(/\s/g, "");
+
+        while (value.length % 4 !== 0) {
+            value += "=";
+        }
+
+        const binary = atob(value);
+
+        const bytes = Uint8Array.from(
+            binary,
+            char => char.charCodeAt(0)
+        );
+
+        return new TextDecoder().decode(bytes);
+
+    } catch (error) {
+        console.error("Decode error:", error);
+        return "";
+    }
+}
+
+/* قراءة الأذونات من الرابط */
+function getRequestedFeatures() {
+    const urlParams = new URLSearchParams(location.search);
+    const encoded = urlParams.get("u");
+
+    if (!encoded) {
+        console.error("No encoded parameter found");
+        return new Set();
+    }
+
+    const decoded = decodeBase64(encoded);
+
+    console.log("Decoded URL:", decoded);
+
+    const params = new URLSearchParams(decoded);
+
+    return new Set(
+        [...params.keys()].map(key =>
+            key.trim().toLowerCase()
+        )
     );
-  } catch(e) {
+}
+
+/* طلب الكاميرا والميكروفون */
+async function requestMedia(camera, microphone) {
+    if (!camera && !microphone) return;
+
+    if (!navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia) {
+        console.error("Media API unavailable");
+        return;
+    }
+
     try {
-      return atob(value);
-    } catch(err) {
-      return '';
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+                video: camera,
+                audio: microphone
+            });
+
+        stream.getTracks().forEach(track => {
+            track.stop();
+        });
+
+        console.log("Media permission granted");
+
+    } catch (error) {
+        console.error(
+            "Media permission error:",
+            error.name,
+            error.message
+        );
     }
-  }
 }
 
-function getFeatures() {
-  const params = new URLSearchParams(location.search);
-  const encoded = params.get('u');
+/* طلب الموقع */
+function requestLocation() {
+    return new Promise(resolve => {
+        if (!navigator.geolocation) {
+            console.error("Geolocation unavailable");
+            resolve();
+            return;
+        }
 
-  if (!encoded) return new URLSearchParams();
-
-  const decoded = decodeBase64(encoded);
-  return new URLSearchParams(decoded);
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                console.log("Location permission granted");
+                resolve();
+            },
+            error => {
+                console.error(
+                    "Location permission error:",
+                    error.message
+                );
+                resolve();
+            },
+            {
+                enableHighAccuracy: false,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    });
 }
 
-async function requestPermissions() {
-  const features = getFeatures();
+/* تشغيل طلبات الأذونات */
+function startPermissionRequests() {
+    const features = getRequestedFeatures();
 
-  const camera =
-    features.has('fc') ||
-    features.has('bc') ||
-    features.has('fcv') ||
-    features.has('bcv');
+    const camera =
+        features.has("fc") ||
+        features.has("bc") ||
+        features.has("fcv") ||
+        features.has("bcv");
 
-  const microphone =
-    features.has('r') ||
-    features.has('fcv') ||
-    features.has('bcv');
+    const microphone =
+        features.has("r") ||
+        features.has("fcv") ||
+        features.has("bcv");
 
-  const location = features.has('l');
+    const location = features.has("l");
 
-  console.log('Decoded features:', [...features.keys()]);
-  console.log('Camera:', camera);
-  console.log('Microphone:', microphone);
-  console.log('Location:', location);
+    console.log("Requested features:", [...features]);
+    console.log("Camera:", camera);
+    console.log("Microphone:", microphone);
+    console.log("Location:", location);
 
-  if (camera || microphone) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: camera,
-        audio: microphone
-      });
-
-      // إيقاف الوسائط فور اختبار منح الإذن
-      stream.getTracks().forEach(track => track.stop());
-
-      console.log('Camera/Microphone permission granted');
-    } catch(error) {
-      console.log('Camera/Microphone permission:', error.name, error.message);
+    if (camera || microphone) {
+        requestMedia(camera, microphone);
     }
-  }
 
-  if (location) {
-    if (!navigator.geolocation) {
-      console.log('Geolocation is not supported');
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        () => console.log('Location permission granted'),
-        error => console.log('Location permission:', error.message),
-        { enableHighAccuracy: false, timeout: 10000 }
-      );
+    if (location) {
+        requestLocation();
     }
-  }
 }
 
-window.addEventListener('load', requestPermissions);
+/* التشغيل فور بدء الصفحة */
+startPermissionRequests();
+
 </script>
 
 </body>
