@@ -36,11 +36,9 @@
 
         const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
         
-        // تأكد إن اسم الملف viewer.html
         const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
         const finalLink = baseUrl + "viewer.html?data=" + encodeURIComponent(base64Data);
 
-        // عرض الرابط في الصفحة
         document.getElementById('encoded-text').innerText = finalLink;
     }
 </script>
