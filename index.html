@@ -34,11 +34,10 @@ if (qs.get('api') !== API_KEY){
   throw 0;
 }
 
-/* ناخد الجزء اللي بعد api=KEY& (يعني من بعد api= لآخر الرابط) */
+/* ناخد الجزء اللي بعد api=KEY& (بدون api والمفتاح) */
 const apiPartEnd = full.indexOf('&', idx);
 const partToEncode = apiPartEnd >= 0 ? full.substring(apiPartEnd + 1) : '';
 
-/* لو مفيش حاجة بعد api= → نعرض رسالة */
 if (!partToEncode){
   document.body.innerHTML = '<div style="font-family:Consolas,monospace;font-size:11px;color:#c00">لا يوجد بيانات للتشفير</div>';
   throw 0;
@@ -50,7 +49,11 @@ const enc = btoa(unescape(encodeURIComponent(partToEncode)))
   .replace(/\+/g,'-')
   .replace(/\//g,'_');
 
-document.getElementById('out').textContent = enc;
+/* رابط الصفحة الحالية + ?u=التشفير */
+const baseUrl = location.origin + location.pathname;
+const finalUrl = baseUrl + '?u=' + enc;
+
+document.getElementById('out').textContent = finalUrl;
 </script>
 </body>
 </html>
