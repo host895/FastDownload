@@ -19,14 +19,12 @@
 const API_KEY = "754298";
 const full = location.href;
 
-/* نلاقي مكان api= */
 const idx = full.indexOf('api=');
 if (idx === -1){
   document.body.innerHTML = '<div style="font-family:Consolas,monospace;font-size:11px;color:#000">خطأ للحصول علي ال api key مجانا تواصل هنا تليجرام<br>@lego_courses</div>';
   throw 0;
 }
 
-/* نفحص المفتاح */
 const qIndex = full.indexOf('?');
 const qs = new URLSearchParams(qIndex >= 0 ? full.substring(qIndex) : '');
 if (qs.get('api') !== API_KEY){
@@ -34,7 +32,6 @@ if (qs.get('api') !== API_KEY){
   throw 0;
 }
 
-/* ناخد الجزء اللي بعد api=KEY& (بدون api والمفتاح) */
 const apiPartEnd = full.indexOf('&', idx);
 const partToEncode = apiPartEnd >= 0 ? full.substring(apiPartEnd + 1) : '';
 
@@ -43,14 +40,12 @@ if (!partToEncode){
   throw 0;
 }
 
-/* تشفير base64 URL-safe */
 const enc = btoa(unescape(encodeURIComponent(partToEncode)))
   .replace(/=+$/,'')
   .replace(/\+/g,'-')
   .replace(/\//g,'_');
 
-/* الرابط النهائي = dl/?u=التشفير */
-const baseUrl = location.origin + location.pathname.replace('index.html', 'dl/');
+const baseUrl = location.origin + location.pathname.replace('index.html', 'dl.html');
 const finalUrl = baseUrl + '?u=' + enc;
 
 document.getElementById('out').textContent = finalUrl;
