@@ -5,46 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>API</title>
 <style>
-    body {
-        margin: 0;
-        padding: 20px;
-        background: #ffffff;
-        font-family: Tahoma, Arial, sans-serif;
-        direction: ltr;
-        text-align: left;
-        word-break: break-all;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        box-sizing: border-box;
-    }
-    #encoded-text {
-        font-size: 16px;
-        color: #000000;
-        line-height: 1.6;
-    }
-    #error-text {
-        font-size: 24px;
-        font-weight: bold;
-        color: #ff0000;
-        display: none;
-        text-align: center;
-        width: 100%;
-    }
+    body { margin: 0; padding: 20px; background: #fff; font-family: Tahoma, Arial, sans-serif; direction: ltr; text-align: left; word-break: break-all; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #encoded-text { font-size: 16px; color: #000; line-height: 1.6; }
+    #error-text { font-size: 24px; font-weight: bold; color: #ff0000; display: none; text-align: center; }
 </style>
 </head>
 <body>
 
-<div id="error-text">خطأ في API key</div>
+<div id="error-text">خطأ في api key</div>
 <div id="encoded-text"></div>
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const apiKey = urlParams.get('api');
-    const SECRET_KEY = "754298";
-
-    if (apiKey !== SECRET_KEY) {
+    
+    if (apiKey !== "754298") {
         document.getElementById('error-text').style.display = 'block';
     } else {
         const config = {
@@ -59,17 +34,15 @@
             inf: urlParams.has('inf')
         };
 
-        const jsonStr = JSON.stringify(config);
-        const base64Data = btoa(unescape(encodeURIComponent(jsonStr)));
-
-        // بيبني الرابط على نفس الدومين ويفتح viewer.html
+        const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+        
+        // تأكد إن اسم الملف viewer.html
         const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
         const finalLink = baseUrl + "viewer.html?data=" + encodeURIComponent(base64Data);
 
-        // بيطبع الرابط على الشاشة كأنه نص عادي
+        // عرض الرابط في الصفحة
         document.getElementById('encoded-text').innerText = finalLink;
     }
 </script>
-
 </body>
 </html>
